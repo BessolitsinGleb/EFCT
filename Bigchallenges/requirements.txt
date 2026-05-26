@@ -1,0 +1,9 @@
+fastapi
+sqlalchemy
+pydantic
+pydantic_settings
+numpy
+pandas
+uvicorn
+asyncpg
+psycopg2-binary

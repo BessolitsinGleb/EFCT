@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Прототип полуавтоматизированного контейнерного терминала</title>
+
+    <style>
+      /* слой */
+      .layer-block {
+        background: #e6f2ff;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+      }
+
+      #layer_table {
+        margin-top: 10px;
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      #layer_table td {
+        background: white;
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+      }
+
+      /* движения */
+      .moves-block {
+        background: #333;
+        padding: 15px;
+        border-radius: 12px;
+      }
+
+      #moves_table {
+        margin-top: 10px;
+        width: 100%;
+        border-collapse: collapse;
+        color: white;
+      }
+
+      #moves_table td,
+      #moves_table th {
+        border: 1px solid white;
+        padding: 8px;
+        text-align: center;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: white;
+        margin: 20px;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .card {
+        background: #e6f2ff;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .arrow {
+        transition: transform 0.3s;
+      }
+
+      .card-content {
+        display: none;
+        margin-top: 10px;
+      }
+
+      input {
+        display: block;
+        margin: 8px 0;
+        padding: 6px;
+        width: 100%;
+      }
+
+      button {
+        background: red;
+        color: white;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+
+      button:hover {
+        opacity: 0.8;
+      }
+
+      .result {
+        margin-top: 10px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Прототип полуавтоматизированного контейнерного терминала</h1>
+
+    <div class="card">
+      <div class="card-header" onclick="toggle(this)">
+        Найти ячейки
+        <span class="arrow">▼</span>
+      </div>
+      <div class="card-content">
+        <input id="find_cells_value" placeholder="value" />
+        <button onclick="findCells()">Запустить</button>
+        <div class="result" id="res_find_cells"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" onclick="toggle(this)">
+        Добавить контейнер
+        <span class="arrow">▼</span>
+      </div>
+      <div class="card-content">
+        <input id="add_cell_id" placeholder="cell_id" />
+        <input id="add_value" placeholder="value" />
+        <button onclick="addContainer()">Запустить</button>
+        <div class="result" id="res_add"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" onclick="toggle(this)">
+        Проверить контейнер
+        <span class="arrow">▼</span>
+      </div>
+      <div class="card-content">
+        <input id="check_num" placeholder="cont_num" />
+        <button onclick="checkContainer()">Запустить</button>
+        <div class="result" id="res_check"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" onclick="toggle(this)">
+        Найти контейнер по ячейке
+        <span class="arrow">▼</span>
+      </div>
+      <div class="card-content">
+        <input id="find_cont_cell" placeholder="cell_id" />
+        <button onclick="findContainer()">Запустить</button>
+        <div class="result" id="res_find_cont"></div>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="card">
+      <div class="card-header" onclick="toggle(this)">
+        Погрузка на транспорт
+        <span class="arrow">▼</span>
+      </div>
+      <div class="card-content">
+        <input id="loading_value" placeholder="value" />
+        <button onclick="loading()">Запустить</button>
+        <div class="result" id="res_loading"></div>
+      </div>
+    </div>
+
+    <!-- REARRANGEMENT -->
+    <div class="card">
+      <div class="card-header" onclick="toggle(this)">
+        Перестановка контейнера
+        <span class="arrow">▼</span>
+      </div>
+      <div class="card-content">
+        <input id="re_value" placeholder="value" />
+        <input id="re_cell" placeholder="cell" />
+        <button onclick="rearrangement()">Запустить</button>
+        <div class="result" id="res_re"></div>
+      </div>
+    </div>
+
+    <h2>Слой контейнеров</h2>
+
+    <div class="layer-block">
+      <input id="layer_input" placeholder="Введите слой (A, B, C)" />
+      <button onclick="loadLayer()">Показать</button>
+
+      <table id="layer_table"></table>
+    </div>
+
+    <h2>Движения контейнеров</h2>
+
+    <div class="moves-block">
+      <button onclick="loadMoves()">Загрузить движения</button>
+
+      <table id="moves_table"></table>
+    </div>
+
+    <script>
+      const API = "http://127.0.0.1:8000";
+
+      / переключение вкладок /;
+      function toggle(header) {
+        const content = header.nextElementSibling;
+        const arrow = header.querySelector(".arrow");
+
+        if (content.style.display === "block") {
+          content.style.display = "none";
+          arrow.style.transform = "rotate(0deg)";
+        } else {
+          content.style.display = "block";
+          arrow.style.transform = "rotate(180deg)";
+        }
+      }
+
+      / универсальный fetch /;
+      function post(url, data, resultId) {
+        fetch(API + url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById(resultId).innerText = JSON.stringify(
+              data,
+              null,
+              2,
+            );
+          })
+          .catch((err) => {
+            document.getElementById(resultId).innerText = err;
+          });
+      }
+
+      / endpoints */;
+
+      function findCells() {
+        const value = document.getElementById("find_cells_value").value;
+
+        fetch(`http://127.0.0.1:8000/container/find_cells?value=${value}`)
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("res_find_cells").innerText =
+              JSON.stringify(data, null, 2);
+          });
+      }
+
+      function addContainer() {
+        post(
+          "/container/add",
+          {
+            cell_id: document.getElementById("add_cell_id").value,
+            value: document.getElementById("add_value").value,
+          },
+          "res_add",
+        );
+      }
+
+      function checkContainer() {
+        const cont_num = document.getElementById("check_num").value;
+
+        fetch(`http://127.0.0.1:8000/container/check?cont_num=${cont_num}`)
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("res_check").innerText = JSON.stringify(
+              data,
+              null,
+              2,
+            );
+          });
+      }
+
+      function findContainer() {
+        const cell_id = document.getElementById("find_cont_cell").value;
+
+        fetch(`http://127.0.0.1:8000/container/find_cont?cell_id=${cell_id}`)
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("res_find_cont").innerText = JSON.stringify(
+              data,
+              null,
+              2,
+            );
+          });
+      }
+
+      function loading() {
+        const value = document.getElementById("loading_value").value;
+
+        fetch(`http://127.0.0.1:8000/container/loading?value=${value}`, {
+          method: "POST",
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("res_loading").innerText = JSON.stringify(
+              data,
+              null,
+              2,
+            );
+          });
+      }
+
+      function rearrangement() {
+        const value = document.getElementById("re_value").value;
+        const cell = document.getElementById("re_cell").value;
+
+        fetch(
+          `http://127.0.0.1:8000/container/rearrangement?value=${value}&cell=${cell}`,
+          {
+            method: "POST",
+          },
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("res_re").innerText = JSON.stringify(
+              data,
+              null,
+              2,
+            );
+          });
+      }
+
+      function loadLayer() {
+        const layer = document.getElementById("layer_input").value;
+
+        fetch(`http://127.0.0.1:8000/container/layer?layer=${layer}`)
+          .then((res) => res.json())
+          .then((data) => {
+            // сортировка: AX1, AY1, AZ1 ... AX2 ...
+            data.sort((a, b) => {
+              const parse = (cell) => {
+                const col = cell[1]; // X Y Z
+                const row = parseInt(cell.slice(2));
+                return { col, row };
+              };
+
+              const A = parse(a.cell_id);
+              const B = parse(b.cell_id);
+
+              if (A.row !== B.row) return A.row - B.row;
+              return A.col.localeCompare(B.col);
+            });
+
+            const table = document.getElementById("layer_table");
+            table.innerHTML = "";
+
+            let currentRow = -1;
+            let tr;
+
+            data.forEach((item) => {
+              const rowNum = parseInt(item.cell_id.slice(2));
+
+              if (rowNum !== currentRow) {
+                tr = document.createElement("tr");
+                table.appendChild(tr);
+                currentRow = rowNum;
+              }
+
+              const td = document.createElement("td");
+              td.innerText = `${item.cell_id}\n${item.value}`;
+              tr.appendChild(td);
+            });
+          });
+      }
+      function loadMoves() {
+        fetch("http://127.0.0.1:8000/container/mooves")
+          .then((res) => res.json())
+          .then((data) => {
+            const table = document.getElementById("moves_table");
+            table.innerHTML = "";
+
+            const header = document.createElement("tr");
+            header.innerHTML = `
+              <th>Контейнер</th>
+              <th>Дата загрузки</th>
+              <th>Дата выгрузки</th>
+            `;
+            table.appendChild(header);
+
+            data.forEach((item) => {
+              const tr = document.createElement("tr");
+
+              tr.innerHTML = `
+                <td>${item.value}</td>
+                <td>${item.added_at}</td>
+                <td>${item.deleted_at}</td>
+              `;
+
+              table.appendChild(tr);
+            });
+          });
+      }
+    </script>
+  </body>
+</html>

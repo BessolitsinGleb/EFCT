@@ -1,0 +1,24 @@
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey
+from .database import Base
+from datetime import datetime
+
+class Coordinates(Base):
+
+    __tablename__ = "container_storage"
+
+    cell_id: Mapped[str] = mapped_column(primary_key=True, unique=True)
+    layer: Mapped[str] = mapped_column(nullable=False)
+    row_num: Mapped[int] = mapped_column(nullable=False) # 1 <= x <= 30
+    coord_type: Mapped[str] = mapped_column(nullable=False)
+    value: Mapped[str] = mapped_column(default='0')
+    company: Mapped[str] = mapped_column(nullable=False)
+    size: Mapped[str] = mapped_column(nullable=False)
+    cont_type: Mapped[str] = mapped_column(nullable=False)
+
+class Mooving(Base):
+    __tablename__ = "mooving"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    value: Mapped[str] = mapped_column(nullable=False)
+    added_at: Mapped[datetime] = mapped_column(default= datetime.utcnow)
+    deleted_at: Mapped[datetime] = mapped_column(default= datetime.utcnow)
