@@ -5,103 +5,369 @@
     <title>Прототип полуавтоматизированного контейнерного терминала</title>
 
     <style>
-      /* слой */
-      .layer-block {
-        background: #e6f2ff;
-        padding: 15px;
-        border-radius: 12px;
-        margin-bottom: 20px;
+      :root {
+        --bg: linear-gradient(135deg, #f4efe4 0%, #dfe8f3 100%);
+        --panel: rgba(255, 252, 247, 0.92);
+        --panel-dark: #17324a;
+        --line: rgba(23, 50, 74, 0.16);
+        --text: #102332;
+        --muted: #556b7c;
+        --accent: #d34d2d;
+        --accent-dark: #a9381d;
+        --empty: #f7f1e8;
+        --busy: #cfe3f6;
+        --shadow: 0 20px 45px rgba(19, 41, 60, 0.12);
       }
 
-      #layer_table {
-        margin-top: 10px;
-        border-collapse: collapse;
-        width: 100%;
+      * {
+        box-sizing: border-box;
       }
 
-      #layer_table td {
-        background: white;
-        border: 1px solid #ccc;
-        padding: 8px;
-        text-align: center;
-      }
-
-      /* движения */
-      .moves-block {
-        background: #333;
-        padding: 15px;
-        border-radius: 12px;
-      }
-
-      #moves_table {
-        margin-top: 10px;
-        width: 100%;
-        border-collapse: collapse;
-        color: white;
-      }
-
-      #moves_table td,
-      #moves_table th {
-        border: 1px solid white;
-        padding: 8px;
-        text-align: center;
-      }
       body {
-        font-family: Arial, sans-serif;
-        background: white;
-        margin: 20px;
+        margin: 0;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--text);
+        background: var(--bg);
       }
 
-      h1 {
-        text-align: center;
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+        margin-bottom: 24px;
+      }
+
+      .hero-card,
+      .summary,
+      .card,
+      .table-panel {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hero-card {
+        padding: 28px;
+      }
+
+      .hero h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 60ch;
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
+
+      .summary {
+        padding: 24px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .summary-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        border-radius: 18px;
+        padding: 14px;
+        background: rgba(207, 227, 246, 0.46);
+        border: 1px solid rgba(16, 35, 50, 0.08);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.7rem;
+        margin-bottom: 4px;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+        gap: 20px;
+      }
+
+      .controls {
+        display: grid;
+        gap: 14px;
+        align-content: start;
       }
 
       .card {
-        background: #e6f2ff;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
+        overflow: hidden;
       }
 
       .card-header {
         display: flex;
+        align-items: center;
         justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px;
         cursor: pointer;
-        font-weight: bold;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.9rem;
+      }
+
+      .card-header:hover {
+        background: rgba(207, 227, 246, 0.28);
       }
 
       .arrow {
-        transition: transform 0.3s;
+        transition: transform 0.25s ease;
       }
 
       .card-content {
         display: none;
-        margin-top: 10px;
+        padding: 0 20px 20px;
       }
 
-      input {
+      .card-content.open {
         display: block;
-        margin: 8px 0;
-        padding: 6px;
+      }
+
+      label {
+        display: block;
+        margin: 12px 0 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      input,
+      select,
+      button {
         width: 100%;
+        border-radius: 14px;
+        font: inherit;
+      }
+
+      input,
+      select {
+        border: 1px solid var(--line);
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.7);
+        color: var(--text);
       }
 
       button {
-        background: red;
-        color: white;
-        border: none;
-        padding: 8px;
+        border: 0;
+        padding: 12px 16px;
+        font-weight: 700;
         cursor: pointer;
-        border-radius: 6px;
+        transition:
+          transform 0.18s ease,
+          opacity 0.18s ease,
+          background 0.18s ease;
       }
 
       button:hover {
-        opacity: 0.8;
+        transform: translateY(-1px);
       }
 
-      .result {
-        margin-top: 10px;
-        font-size: 14px;
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-dark);
+      }
+
+      .btn-secondary {
+        background: #183852;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #10293d;
+      }
+
+      .btn-ghost {
+        background: rgba(24, 56, 82, 0.08);
+        color: var(--text);
+      }
+
+      .result,
+      .info-box {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(16, 35, 50, 0.08);
+        white-space: pre-wrap;
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 0.92rem;
+        min-height: 48px;
+      }
+
+      .workspace {
+        display: grid;
+        gap: 20px;
+      }
+
+      .table-panel {
+        padding: 20px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .panel-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .layer-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .terminal-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .layer-card {
+        border-radius: 20px;
+        padding: 14px;
+        background: rgba(207, 227, 246, 0.3);
+        border: 1px solid rgba(16, 35, 50, 0.08);
+      }
+
+      .layer-card.active {
+        background: rgba(211, 77, 45, 0.14);
+        border-color: rgba(211, 77, 45, 0.28);
+      }
+
+      .layer-card h3 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid rgba(16, 35, 50, 0.08);
+        text-align: center;
+        padding: 10px 8px;
+      }
+
+      th {
+        background: rgba(24, 56, 82, 0.1);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      td.empty {
+        background: var(--empty);
+        color: #85786e;
+      }
+
+      td.busy {
+        background: var(--busy);
+        font-weight: 700;
+      }
+
+      .moves-table {
+        overflow-x: auto;
+      }
+
+      .moves-table table {
+        min-width: 560px;
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      @media (max-width: 1024px) {
+        .hero,
+        .layout,
+        .terminal-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding: 18px 14px 28px;
+        }
+
+        .hero-card,
+        .summary,
+        .table-panel,
+        .card-header,
+        .card-content {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>

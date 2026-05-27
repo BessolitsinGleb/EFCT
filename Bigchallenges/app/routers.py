@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from .database import get_db
 from sqlalchemy.orm import Session
-from .models import Coordinates, Mooving
+from .models import Coordinates, Mooving, Movement_info
 from sqlalchemy import select, cast, String, update, Float
 from .schemas import FindCells, AddCont, Layer, Mooves
 from typing import List
@@ -64,6 +64,12 @@ def add_cont(
     time = Mooving(value= cast(data.value, Float))
     db.add(time)
     
+    movement = Movement_info(moove_type= "adding",
+                             value= cast(data.value, Float),
+                             path_num_from= data.path_num_from,
+                             movement_time= datetime.utcnow())
+    db.add(movement)
+
     update_stmt = (
         update(Coordinates)
         .where(Coordinates.cell_id == data.cell_id)
@@ -136,10 +142,11 @@ def find_cont(cell_id: str,
     if not cell:
         raise HTTPException(404, "not found")
     
-    return {"status": "success", "cont_num": cell.value, "size": cell.size}
+    return {"status": "success", "container num": cell.value, "size": cell.size, "path num": cell.path_num_to, "sent date": cell.sent_date}
 
 @router.post("/loading")
 def load_cont(value: str,
+              path_num: int,
               db: Session = Depends(get_db)):
     stmt = select(Coordinates).where(cast(Coordinates.value, String) == value)
     cont = db.execute(stmt).scalar_one_or_none()
@@ -172,6 +179,12 @@ def load_cont(value: str,
 
     time = update(Mooving).where(cast(Mooving.value, String) == value).values(deleted_at = datetime.utcnow())
 
+    movement = Movement_info(moove_type= "loading",
+                             value= value,
+                             path_num_to= path_num,
+                             movement_time= datetime.utcnow())
+    
+    db.add(movement)
     db.execute(time)
     db.execute(res)
     db.commit()
@@ -248,7 +261,12 @@ def rearrange_cont(value: str,
                                                                                  size = cell_from.size,
                                                                                  company = cell_from.company,
                                                                                  cont_type = cell_from.cont_type)
-
+    movement = Movement_info(moove_type= "rearrangement",
+                             value= value,
+                             cell_from= cell_from.cell_id,
+                             cell_to= cell,
+                             movement_time= datetime.utcnow())
+    db.add(movement)
     db.execute(rearrange_from)
     db.execute(rearrange_to)
     db.commit()
