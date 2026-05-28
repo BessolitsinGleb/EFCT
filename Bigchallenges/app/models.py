@@ -48,3 +48,9 @@ class Movement_info(Base):
 
 
 
+    """
+    const localDateValue = document.getElementById("sent_date_input").value; 
+        const dateObject = new Date(localDateValue);
+        const isoDateStr = dateObject.toISOString(); 
+        payload.sent_date = isoDateStr;
+    """

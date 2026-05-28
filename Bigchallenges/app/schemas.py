@@ -26,3 +26,13 @@ class Mooves(BaseModel):
     value: float
     added_at: datetime
     deleted_at: datetime
+
+# class Mooves(BaseModel):
+#     value: float
+#     moove_type: str
+#     path_num_from: int | None
+#     path_num_to: int | None
+#     cell_from: str | None
+#     cell_to: str | None
+#     movement_time: datetime
+ 

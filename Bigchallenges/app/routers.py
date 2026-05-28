@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from .database import get_db
 from sqlalchemy.orm import Session
 from .models import Coordinates, Mooving, Movement_info
-from sqlalchemy import select, cast, String, update, Float
+from sqlalchemy import select, cast, String, update, Float, desc
 from .schemas import FindCells, AddCont, Layer, Mooves
 from typing import List
 from datetime import datetime
@@ -287,7 +287,14 @@ def get_layer(layer: str,
 
 @router.get("/mooves", response_model=List[Mooves])
 def mooves(db: Session = Depends(get_db)):
-    stmt = select(Mooving)
+    stmt = select(Mooving).order_by(desc(Mooving.id)).limit(10)
     res = db.execute(stmt).scalars().all()
 
     return res
+
+# @router.get("/mooves", response_model=List[Mooves])
+# def mooves(db: Session = Depends(get_db)):
+#     stmt = select(Movement_info).order_by(desc(Movement_info.moove_id)).limit(10)
+#     res = db.execute(stmt).scalars().all()
+
+#     return res

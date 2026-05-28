@@ -16,12 +16,12 @@ def migration():
         query = "SELECT * FROM movement_information;"
         df = pd.read_sql_query(query, con=engine)
         
-        filename = "movement_information.xlsx"
+        filename = "movement_information.csv"
         if os.path.exists(filename):
             os.remove(filename)
             # print(f"Старый файл {filename} успешно удален.")
 
-        df.to_excel(filename, index=False)
+        df.to_csv(filename, index=False)
         # print(f"Данные успешно выгружены в {filename}")
         
     except Exception as e:
