@@ -6,6 +6,7 @@ from sqlalchemy import select, cast, String, update, Float
 from .schemas import FindCells, AddCont, Layer, Mooves
 from typing import List
 from datetime import datetime
+from .mig_to_excel import migration
 
 router = APIRouter(prefix="/container", tags=['container'])
 
@@ -78,10 +79,10 @@ def add_cont(
                 company=data.company,
                 cont_type=data.cont_type) 
     )
-    
+
     db.execute(update_stmt)
     db.commit()
-    
+    migration()
     return {"status": "success", "cell": data.cell_id, "container": data.value}
 
 @router.get("/check")
@@ -188,7 +189,7 @@ def load_cont(value: str,
     db.execute(time)
     db.execute(res)
     db.commit()
-
+    migration()
     return {"status": "success"}
 
 @router.post("/rearrangement")
@@ -270,7 +271,7 @@ def rearrange_cont(value: str,
     db.execute(rearrange_from)
     db.execute(rearrange_to)
     db.commit()
-
+    migration()
     return {"status": "success",
             "container": value,
             "from": cell_from.cell_id,
