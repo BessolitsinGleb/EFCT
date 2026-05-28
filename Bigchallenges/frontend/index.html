@@ -2,8 +2,8 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <title>Прототип полуавтоматизированного контейнерного терминала</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ЭДКТ — Диспетчер контейнерного терминала</title>
     <style>
       :root {
         --bg: linear-gradient(135deg, #f4efe4 0%, #dfe8f3 100%);
@@ -19,9 +19,7 @@
         --shadow: 0 20px 45px rgba(19, 41, 60, 0.12);
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
 
       body {
         margin: 0;
@@ -36,6 +34,7 @@
         padding: 32px 20px 48px;
       }
 
+      /* ── Hero ── */
       .hero {
         display: grid;
         grid-template-columns: 1.2fr 0.8fr;
@@ -54,9 +53,7 @@
         backdrop-filter: blur(12px);
       }
 
-      .hero-card {
-        padding: 28px;
-      }
+      .hero-card { padding: 28px; }
 
       .hero h1 {
         margin: 0 0 12px;
@@ -80,10 +77,12 @@
         margin-top: 20px;
       }
 
+      /* ── Summary ── */
       .summary {
         padding: 24px;
         display: grid;
         gap: 12px;
+        align-content: start;
       }
 
       .summary-title {
@@ -93,30 +92,7 @@
         color: var(--muted);
       }
 
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .stat {
-        border-radius: 18px;
-        padding: 14px;
-        background: rgba(207, 227, 246, 0.46);
-        border: 1px solid rgba(16, 35, 50, 0.08);
-      }
-
-      .stat strong {
-        display: block;
-        font-size: 1.7rem;
-        margin-bottom: 4px;
-      }
-
-      .stat span {
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-
+      /* ── Layout ── */
       .layout {
         display: grid;
         grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
@@ -129,9 +105,8 @@
         align-content: start;
       }
 
-      .card {
-        overflow: hidden;
-      }
+      /* ── Cards ── */
+      .card { overflow: hidden; }
 
       .card-header {
         display: flex;
@@ -144,25 +119,21 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
         font-size: 0.9rem;
+        user-select: none;
       }
 
-      .card-header:hover {
-        background: rgba(207, 227, 246, 0.28);
-      }
+      .card-header:hover { background: rgba(207, 227, 246, 0.28); }
 
-      .arrow {
-        transition: transform 0.25s ease;
-      }
+      .arrow { transition: transform 0.25s ease; }
 
       .card-content {
         display: none;
         padding: 0 20px 20px;
       }
 
-      .card-content.open {
-        display: block;
-      }
+      .card-content.open { display: block; }
 
+      /* ── Form elements ── */
       label {
         display: block;
         margin: 12px 0 6px;
@@ -187,6 +158,13 @@
         padding: 12px 14px;
         background: rgba(255, 255, 255, 0.7);
         color: var(--text);
+        outline: none;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.9);
       }
 
       button {
@@ -194,39 +172,21 @@
         padding: 12px 16px;
         font-weight: 700;
         cursor: pointer;
-        transition:
-          transform 0.18s ease,
-          opacity 0.18s ease,
-          background 0.18s ease;
+        transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
       }
 
-      button:hover {
-        transform: translateY(-1px);
-      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(0); }
 
-      .btn-primary {
-        background: var(--accent);
-        color: white;
-      }
+      .btn-primary { background: var(--accent); color: white; }
+      .btn-primary:hover { background: var(--accent-dark); }
 
-      .btn-primary:hover {
-        background: var(--accent-dark);
-      }
+      .btn-secondary { background: #183852; color: white; }
+      .btn-secondary:hover { background: #10293d; }
 
-      .btn-secondary {
-        background: #183852;
-        color: white;
-      }
+      .btn-ghost { background: rgba(24, 56, 82, 0.08); color: var(--text); }
 
-      .btn-secondary:hover {
-        background: #10293d;
-      }
-
-      .btn-ghost {
-        background: rgba(24, 56, 82, 0.08);
-        color: var(--text);
-      }
-
+      /* ── Result boxes ── */
       .result,
       .info-box {
         margin-top: 12px;
@@ -238,16 +198,16 @@
         font-family: "Consolas", "Courier New", monospace;
         font-size: 0.92rem;
         min-height: 48px;
+        word-break: break-word;
       }
 
-      .workspace {
-        display: grid;
-        gap: 20px;
-      }
+      .result.success { border-color: rgba(40, 167, 80, 0.35); background: rgba(220, 255, 230, 0.6); }
+      .result.error   { border-color: rgba(211, 77, 45, 0.35); background: rgba(255, 235, 230, 0.6); }
 
-      .table-panel {
-        padding: 20px;
-      }
+      /* ── Workspace ── */
+      .workspace { display: grid; gap: 20px; }
+
+      .table-panel { padding: 20px; }
 
       .panel-head {
         display: flex;
@@ -255,6 +215,7 @@
         justify-content: space-between;
         gap: 12px;
         margin-bottom: 16px;
+        flex-wrap: wrap;
       }
 
       .panel-head h2 {
@@ -265,7 +226,7 @@
       }
 
       .panel-head p {
-        margin: 0;
+        margin: 4px 0 0;
         color: var(--muted);
         font-size: 0.88rem;
       }
@@ -274,8 +235,13 @@
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
+        align-items: center;
       }
 
+      .layer-actions select { width: auto; min-width: 120px; }
+      .layer-actions button { width: auto; }
+
+      /* ── Terminal grid (layer cards) ── */
       .terminal-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -301,16 +267,14 @@
         letter-spacing: 0.08em;
       }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
+      /* ── Tables ── */
+      table { width: 100%; border-collapse: collapse; }
 
-      th,
-      td {
+      th, td {
         border: 1px solid rgba(16, 35, 50, 0.08);
         text-align: center;
         padding: 10px 8px;
+        font-size: 0.88rem;
       }
 
       th {
@@ -320,29 +284,43 @@
         letter-spacing: 0.08em;
       }
 
-      td.empty {
-        background: var(--empty);
-        color: #85786e;
+      td.empty { background: var(--empty); color: #85786e; }
+      td.busy  { background: var(--busy); font-weight: 700; }
+
+      .moves-table { overflow-x: auto; }
+      .moves-table table { min-width: 560px; }
+
+      /* ── Loader ── */
+      .loader {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(16, 35, 50, 0.15);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
       }
 
-      td.busy {
-        background: var(--busy);
-        font-weight: 700;
-      }
+      @keyframes spin { to { transform: rotate(360deg); } }
 
-      .moves-table {
-        overflow-x: auto;
-      }
+      /* ── Misc ── */
+      .subtle { color: var(--muted); font-size: 0.88rem; }
 
-      .moves-table table {
-        min-width: 560px;
-      }
+      .mt { margin-top: 10px; }
 
-      .subtle {
+      .endpoint-tag {
+        font-size: 0.7rem;
+        font-weight: 400;
         color: var(--muted);
-        font-size: 0.88rem;
+        font-family: "Consolas", monospace;
+        letter-spacing: 0;
+        text-transform: none;
+        margin-left: 8px;
       }
 
+      /* ── Responsive ── */
       @media (max-width: 1024px) {
         .hero,
         .layout,
@@ -352,10 +330,7 @@
       }
 
       @media (max-width: 640px) {
-        .page {
-          padding: 18px 14px 28px;
-        }
-
+        .page { padding: 18px 14px 28px; }
         .hero-card,
         .summary,
         .table-panel,
@@ -364,305 +339,446 @@
           padding-left: 16px;
           padding-right: 16px;
         }
-
-        .summary-grid {
-          grid-template-columns: 1fr;
-        }
       }
     </style>
   </head>
   <body>
-    <h1>Прототип полуавтоматизированного контейнерного терминала</h1>
+    <div class="page">
 
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        Найти ячейки
-        <span class="arrow">▼</span>
-      </div>
-      <div class="card-content">
-        <input id="find_cells_value" placeholder="value" />
-        <button onclick="findCells()">Запустить</button>
-        <div class="result" id="res_find_cells"></div>
-      </div>
-    </div>
+      <!-- ═══ HERO ═══ -->
+      <section class="hero">
+        <div class="hero-card">
+          <h1>ЭДКТ</h1>
+          <p>
+            Электронный диспетчер контейнерного терминала. Управление
+            размещением, перемещением и мониторингом контейнеров в реальном
+            времени.
+          </p>
+          <div class="hero-actions">
+            <button class="btn-secondary" onclick="loadLayer()">Обновить слой</button>
+            <button class="btn-secondary" onclick="loadMoves()">Обновить движения</button>
+          </div>
+        </div>
 
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        Добавить контейнер
-        <span class="arrow">▼</span>
-      </div>
-      <div class="card-content">
-        <input id="add_cell_id" placeholder="cell_id" />
-        <input id="add_value" placeholder="value" />
-        <button onclick="addContainer()">Запустить</button>
-        <div class="result" id="res_add"></div>
-      </div>
-    </div>
+        <aside class="summary">
+          <div class="summary-title">Последнее действие</div>
+          <div class="info-box" id="status_box">Готов к работе.</div>
+        </aside>
+      </section>
 
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        Проверить контейнер
-        <span class="arrow">▼</span>
-      </div>
-      <div class="card-content">
-        <input id="check_num" placeholder="cont_num" />
-        <button onclick="checkContainer()">Запустить</button>
-        <div class="result" id="res_check"></div>
-      </div>
-    </div>
+      <!-- ═══ MAIN LAYOUT ═══ -->
+      <section class="layout">
 
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        Найти контейнер по ячейке
-        <span class="arrow">▼</span>
-      </div>
-      <div class="card-content">
-        <input id="find_cont_cell" placeholder="cell_id" />
-        <button onclick="findContainer()">Запустить</button>
-        <div class="result" id="res_find_cont"></div>
-      </div>
-    </div>
+        <!-- ─── LEFT: Controls ─── -->
+        <div class="controls">
 
-    <!-- LOADING -->
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        Погрузка на транспорт
-        <span class="arrow">▼</span>
-      </div>
-      <div class="card-content">
-        <input id="loading_value" placeholder="value" />
-        <button onclick="loading()">Запустить</button>
-        <div class="result" id="res_loading"></div>
-      </div>
-    </div>
+          <!-- 1. Найти ячейки по контейнеру -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Найти ячейки по контейнеру
+              <span class="endpoint-tag">GET /find_cells</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="find_cells_value">Номер контейнера</label>
+              <input id="find_cells_value" placeholder="Например, 208" />
+              <button class="btn-primary mt" onclick="findCells()">Выполнить</button>
+              <div class="result" id="res_find_cells"></div>
+            </div>
+          </div>
 
-    <!-- REARRANGEMENT -->
-    <div class="card">
-      <div class="card-header" onclick="toggle(this)">
-        Перестановка контейнера
-        <span class="arrow">▼</span>
-      </div>
-      <div class="card-content">
-        <input id="re_value" placeholder="value" />
-        <input id="re_cell" placeholder="cell" />
-        <button onclick="rearrangement()">Запустить</button>
-        <div class="result" id="res_re"></div>
-      </div>
-    </div>
+          <!-- 2. Добавить контейнер -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Добавить контейнер
+              <span class="endpoint-tag">POST /add</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="add_cell_id">Ячейка</label>
+              <input id="add_cell_id" placeholder="Например, BX5" />
+              <label for="add_value">Номер контейнера</label>
+              <input id="add_value" placeholder="Например, 7001" />
+              <label for="add_company">Компания</label>
+              <input id="add_company" placeholder="Название компании" />
+              <label for="add_size">Размер</label>
+              <input id="add_size" placeholder="20ft / 40ft" />
+              <label for="add_cont_type">Тип контейнера</label>
+              <input id="add_cont_type" placeholder="dry / reefer / tank" />
+              <label for="add_send_date">Дата отправки</label>
+              <input id="add_send_date" type="datetime-local" />
+              <label for="add_path_from">Маршрут (откуда, номер)</label>
+              <input id="add_path_from" type="number" placeholder="1" min="1" />
+              <label for="add_path_to">Маршрут (куда, номер)</label>
+              <input id="add_path_to" type="number" placeholder="2" min="1" />
+              <button class="btn-primary mt" onclick="addContainer()">Добавить</button>
+              <div class="result" id="res_add"></div>
+            </div>
+          </div>
 
-    <h2>Слой контейнеров</h2>
+          <!-- 3. Проверить контейнер сверху -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Проверить контейнер сверху
+              <span class="endpoint-tag">GET /check</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="check_num">Номер контейнера</label>
+              <input id="check_num" placeholder="Например, 31" />
+              <button class="btn-primary mt" onclick="checkContainer()">Проверить</button>
+              <div class="result" id="res_check"></div>
+            </div>
+          </div>
 
-    <div class="layer-block">
-      <input id="layer_input" placeholder="Введите слой (A, B, C)" />
-      <button onclick="loadLayer()">Показать</button>
+          <!-- 4. Найти контейнер по ячейке -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Найти контейнер по ячейке
+              <span class="endpoint-tag">GET /find_cont</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="find_cont_cell">ID ячейки</label>
+              <input id="find_cont_cell" placeholder="Например, AY4" />
+              <button class="btn-primary mt" onclick="findContainer()">Найти</button>
+              <div class="result" id="res_find_cont"></div>
+            </div>
+          </div>
 
-      <table id="layer_table"></table>
-    </div>
+          <!-- 5. Погрузка на транспорт -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Погрузка на транспорт
+              <span class="endpoint-tag">POST /loading</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="loading_value">Номер контейнера</label>
+              <input id="loading_value" placeholder="Например, 96" />
+              <label for="loading_path">Номер пути</label>
+              <input id="loading_path" type="number" placeholder="1" min="1" />
+              <button class="btn-primary mt" onclick="loading()">Выгрузить</button>
+              <div class="result" id="res_loading"></div>
+            </div>
+          </div>
 
-    <h2>Движения контейнеров</h2>
+          <!-- 6. Перестановка контейнера -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Перестановка контейнера
+              <span class="endpoint-tag">POST /rearrangement</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="re_value">Номер контейнера</label>
+              <input id="re_value" placeholder="Например, 103" />
+              <label for="re_cell">Новая ячейка</label>
+              <input id="re_cell" placeholder="Например, BX28" />
+              <button class="btn-primary mt" onclick="rearrangement()">Переместить</button>
+              <div class="result" id="res_re"></div>
+            </div>
+          </div>
 
-    <div class="moves-block">
-      <button onclick="loadMoves()">Загрузить движения</button>
+        </div><!-- /controls -->
 
-      <table id="moves_table"></table>
-    </div>
+        <!-- ─── RIGHT: Workspace ─── -->
+        <div class="workspace">
+
+          <!-- Слой контейнеров -->
+          <div class="table-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Слой контейнеров</h2>
+                <p>Все ячейки выбранного слоя и их текущее состояние.</p>
+              </div>
+              <div class="layer-actions">
+                <select id="layer_input">
+                  <option value="A">Слой A</option>
+                  <option value="B">Слой B</option>
+                  <option value="C">Слой C</option>
+                </select>
+                <button class="btn-secondary" onclick="loadLayer()">Обновить</button>
+              </div>
+            </div>
+            <div id="layer_container">
+              <p class="subtle">Выберите слой и нажмите «Обновить».</p>
+            </div>
+          </div>
+
+          <!-- Журнал движений -->
+          <div class="table-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Журнал движений</h2>
+                <p>История загрузок, выгрузок и перестановок контейнеров.</p>
+              </div>
+              <button class="btn-secondary" style="width:auto" onclick="loadMoves()">Обновить</button>
+            </div>
+            <div class="moves-table">
+              <table id="moves_table">
+                <tbody>
+                  <tr><td colspan="3" class="subtle">Нажмите «Обновить» для загрузки данных.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /workspace -->
+      </section>
+    </div><!-- /page -->
 
     <script>
       const API = "http://127.0.0.1:8000";
 
-      / переключение вкладок /;
+      /* ── Toggle collapse ── */
       function toggle(header) {
         const content = header.nextElementSibling;
-        const arrow = header.querySelector(".arrow");
+        const arrow   = header.querySelector(".arrow");
+        const isOpen  = content.classList.contains("open");
+        content.classList.toggle("open", !isOpen);
+        arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+      }
 
-        if (content.style.display === "block") {
-          content.style.display = "none";
-          arrow.style.transform = "rotate(0deg)";
-        } else {
-          content.style.display = "block";
-          arrow.style.transform = "rotate(180deg)";
+      /* ── Generic fetch helpers ── */
+      function setResult(id, data, isError = false) {
+        const el = document.getElementById(id);
+        el.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+        el.className = "result" + (isError ? " error" : " success");
+      }
+
+      function setStatus(msg) {
+        document.getElementById("status_box").textContent = msg;
+      }
+
+      function showLoading(id) {
+        const el = document.getElementById(id);
+        el.innerHTML = '<span class="loader"></span>Загрузка...';
+        el.className = "result";
+      }
+
+      async function apiGet(path, resultId) {
+        showLoading(resultId);
+        try {
+          const res  = await fetch(API + path);
+          const data = await res.json();
+          setResult(resultId, data, !res.ok);
+          if (res.ok) setStatus(`GET ${path} — OK`);
+          return data;
+        } catch (e) {
+          setResult(resultId, `Ошибка: ${e.message}`, true);
+          return null;
         }
       }
 
-      / универсальный fetch /;
-      function post(url, data, resultId) {
-        fetch(API + url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById(resultId).innerText = JSON.stringify(
-              data,
-              null,
-              2,
-            );
-          })
-          .catch((err) => {
-            document.getElementById(resultId).innerText = err;
-          });
+      async function apiPost(path, body, resultId) {
+        showLoading(resultId);
+        try {
+          const opts = { method: "POST" };
+          if (body) {
+            opts.headers = { "Content-Type": "application/json" };
+            opts.body    = JSON.stringify(body);
+          }
+          const res  = await fetch(API + path, opts);
+          const data = await res.json();
+          setResult(resultId, data, !res.ok);
+          if (res.ok) setStatus(`POST ${path} — OK`);
+          return data;
+        } catch (e) {
+          setResult(resultId, `Ошибка: ${e.message}`, true);
+          return null;
+        }
       }
 
-      / endpoints */;
+      /* ── Endpoints ── */
 
       function findCells() {
-        const value = document.getElementById("find_cells_value").value;
-
-        fetch(`http://127.0.0.1:8000/container/find_cells?value=${value}`)
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById("res_find_cells").innerText =
-              JSON.stringify(data, null, 2);
-          });
+        const value = document.getElementById("find_cells_value").value.trim();
+        apiGet(`/container/find_cells?value=${encodeURIComponent(value)}`, "res_find_cells");
       }
 
       function addContainer() {
-        post(
-          "/container/add",
-          {
-            cell_id: document.getElementById("add_cell_id").value,
-            value: document.getElementById("add_value").value,
-          },
-          "res_add",
-        );
+        const sendDateRaw = document.getElementById("add_send_date").value;
+        const body = {
+          cell_id:       document.getElementById("add_cell_id").value.trim(),
+          value:         document.getElementById("add_value").value.trim(),
+          company:       document.getElementById("add_company").value.trim(),
+          size:          document.getElementById("add_size").value.trim(),
+          cont_type:     document.getElementById("add_cont_type").value.trim(),
+          send_date:     sendDateRaw ? new Date(sendDateRaw).toISOString() : null,
+          path_num_from: parseInt(document.getElementById("add_path_from").value) || 0,
+          path_num_to:   parseInt(document.getElementById("add_path_to").value) || 0,
+        };
+        apiPost("/container/add", body, "res_add");
       }
 
       function checkContainer() {
-        const cont_num = document.getElementById("check_num").value;
-
-        fetch(`http://127.0.0.1:8000/container/check?cont_num=${cont_num}`)
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById("res_check").innerText = JSON.stringify(
-              data,
-              null,
-              2,
-            );
-          });
+        const cont_num = document.getElementById("check_num").value.trim();
+        apiGet(`/container/check?cont_num=${encodeURIComponent(cont_num)}`, "res_check");
       }
 
       function findContainer() {
-        const cell_id = document.getElementById("find_cont_cell").value;
-
-        fetch(`http://127.0.0.1:8000/container/find_cont?cell_id=${cell_id}`)
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById("res_find_cont").innerText = JSON.stringify(
-              data,
-              null,
-              2,
-            );
-          });
+        const cell_id = document.getElementById("find_cont_cell").value.trim();
+        apiGet(`/container/find_cont?cell_id=${encodeURIComponent(cell_id)}`, "res_find_cont");
       }
 
       function loading() {
-        const value = document.getElementById("loading_value").value;
-
-        fetch(`http://127.0.0.1:8000/container/loading?value=${value}`, {
-          method: "POST",
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById("res_loading").innerText = JSON.stringify(
-              data,
-              null,
-              2,
-            );
-          });
+        const value    = document.getElementById("loading_value").value.trim();
+        const path_num = document.getElementById("loading_path").value.trim();
+        apiPost(
+          `/container/loading?value=${encodeURIComponent(value)}&path_num=${encodeURIComponent(path_num)}`,
+          null,
+          "res_loading"
+        );
       }
 
       function rearrangement() {
-        const value = document.getElementById("re_value").value;
-        const cell = document.getElementById("re_cell").value;
-
-        fetch(
-          `http://127.0.0.1:8000/container/rearrangement?value=${value}&cell=${cell}`,
-          {
-            method: "POST",
-          },
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById("res_re").innerText = JSON.stringify(
-              data,
-              null,
-              2,
-            );
-          });
+        const value = document.getElementById("re_value").value.trim();
+        const cell  = document.getElementById("re_cell").value.trim();
+        apiPost(
+          `/container/rearrangement?value=${encodeURIComponent(value)}&cell=${encodeURIComponent(cell)}`,
+          null,
+          "res_re"
+        );
       }
 
-      function loadLayer() {
-        const layer = document.getElementById("layer_input").value;
+      /* ── Layer table ── */
 
-        fetch(`http://127.0.0.1:8000/container/layer?layer=${layer}`)
-          .then((res) => res.json())
-          .then((data) => {
-            // сортировка: AX1, AY1, AZ1 ... AX2 ...
-            data.sort((a, b) => {
-              const parse = (cell) => {
-                const col = cell[1]; // X Y Z
-                const row = parseInt(cell.slice(2));
-                return { col, row };
-              };
-
-              const A = parse(a.cell_id);
-              const B = parse(b.cell_id);
-
-              if (A.row !== B.row) return A.row - B.row;
-              return A.col.localeCompare(B.col);
-            });
-
-            const table = document.getElementById("layer_table");
-            table.innerHTML = "";
-
-            let currentRow = -1;
-            let tr;
-
-            data.forEach((item) => {
-              const rowNum = parseInt(item.cell_id.slice(2));
-
-              if (rowNum !== currentRow) {
-                tr = document.createElement("tr");
-                table.appendChild(tr);
-                currentRow = rowNum;
-              }
-
-              const td = document.createElement("td");
-              td.innerText = `${item.cell_id}\n${item.value}`;
-              tr.appendChild(td);
-            });
-          });
+      function parseCell(cellId) {
+        const coord  = cellId[1];          // X, Y, Z
+        const rowNum = parseInt(cellId.slice(2));
+        return { coord, rowNum };
       }
-      function loadMoves() {
-        fetch("http://127.0.0.1:8000/container/mooves")
-          .then((res) => res.json())
-          .then((data) => {
-            const table = document.getElementById("moves_table");
-            table.innerHTML = "";
 
-            const header = document.createElement("tr");
-            header.innerHTML = `
-              <th>Контейнер</th>
-              <th>Дата загрузки</th>
-              <th>Дата выгрузки</th>
-            `;
-            table.appendChild(header);
+      const COORD_ORDER = { X: 0, Y: 1, Z: 2 };
 
-            data.forEach((item) => {
-              const tr = document.createElement("tr");
+      function buildLayerTable(data) {
+        // Sort: by row number, then by coord X < Y < Z
+        const sorted = [...data].sort((a, b) => {
+          const pa = parseCell(a.cell_id);
+          const pb = parseCell(b.cell_id);
+          if (pa.rowNum !== pb.rowNum) return pa.rowNum - pb.rowNum;
+          return COORD_ORDER[pa.coord] - COORD_ORDER[pb.coord];
+        });
 
-              tr.innerHTML = `
-                <td>${item.value}</td>
-                <td>${item.added_at}</td>
-                <td>${item.deleted_at}</td>
-              `;
+        // Group by row number
+        const rowMap = new Map();
+        sorted.forEach(item => {
+          const { rowNum } = parseCell(item.cell_id);
+          if (!rowMap.has(rowNum)) rowMap.set(rowNum, []);
+          rowMap.get(rowNum).push(item);
+        });
 
-              table.appendChild(tr);
-            });
+        const rows = [...rowMap.entries()].sort(([a], [b]) => a - b);
+
+        const bodyRows = rows.map(([rowNum, cells]) => {
+          const tds = cells.map(item => {
+            const isEmpty = !item.value || item.value === "0" || item.value === "";
+            const cls     = isEmpty ? "empty" : "busy";
+            const label   = isEmpty ? "—" : item.value;
+            return `<td class="${cls}" title="${item.cell_id}">
+              <strong>${item.cell_id}</strong><br/>${label}
+            </td>`;
+          }).join("");
+          return `<tr>${tds}</tr>`;
+        }).join("");
+
+        return `
+          <table>
+            <thead>
+              <tr>
+                <th>X</th>
+                <th>Y</th>
+                <th>Z</th>
+              </tr>
+            </thead>
+            <tbody>${bodyRows}</tbody>
+          </table>`;
+      }
+
+      async function loadLayer() {
+        const layer     = document.getElementById("layer_input").value;
+        const container = document.getElementById("layer_container");
+        container.innerHTML = '<p class="subtle"><span class="loader"></span>Загрузка данных слоя ' + layer + '...</p>';
+
+        try {
+          const res  = await fetch(`${API}/container/layer?layer=${encodeURIComponent(layer)}`);
+          const data = await res.json();
+
+          if (!res.ok) {
+            container.innerHTML = `<p class="subtle" style="color:var(--accent)">Ошибка: ${JSON.stringify(data)}</p>`;
+            return;
+          }
+
+          if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = '<p class="subtle">Нет данных для слоя ' + layer + '.</p>';
+            return;
+          }
+
+          container.innerHTML = buildLayerTable(data);
+          setStatus(`Слой ${layer} загружен (${data.length} ячеек).`);
+        } catch (e) {
+          container.innerHTML = `<p class="subtle" style="color:var(--accent)">Ошибка соединения: ${e.message}</p>`;
+        }
+      }
+
+      /* ── Moves table ── */
+
+      async function loadMoves() {
+        const table = document.getElementById("moves_table");
+        table.innerHTML = `<tbody><tr><td colspan="3"><span class="loader"></span>Загрузка...</td></tr></tbody>`;
+
+        try {
+          const res  = await fetch(`${API}/container/mooves`);
+          const data = await res.json();
+
+          if (!res.ok) {
+            table.innerHTML = `<tbody><tr><td colspan="3" style="color:var(--accent)">Ошибка: ${JSON.stringify(data)}</td></tr></tbody>`;
+            return;
+          }
+
+          const sorted = Array.isArray(data)
+            ? [...data].sort((a, b) => (b.added_at ?? "").localeCompare(a.added_at ?? ""))
+            : [];
+
+          const bodyRows = sorted.length
+            ? sorted.map(item => `
+                <tr>
+                  <td>${item.value ?? "—"}</td>
+                  <td>${formatDate(item.added_at)}</td>
+                  <td>${formatDate(item.deleted_at)}</td>
+                </tr>`).join("")
+            : `<tr><td colspan="3" class="subtle">Журнал пока пуст.</td></tr>`;
+
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>Контейнер</th>
+                <th>Дата загрузки</th>
+                <th>Дата выгрузки</th>
+              </tr>
+            </thead>
+            <tbody>${bodyRows}</tbody>`;
+
+          setStatus(`Журнал движений обновлён (${sorted.length} записей).`);
+        } catch (e) {
+          table.innerHTML = `<tbody><tr><td colspan="3" style="color:var(--accent)">Ошибка соединения: ${e.message}</td></tr></tbody>`;
+        }
+      }
+
+      function formatDate(iso) {
+        if (!iso) return "—";
+        try {
+          return new Date(iso).toLocaleString("ru-RU", {
+            day:    "2-digit",
+            month:  "2-digit",
+            year:   "numeric",
+            hour:   "2-digit",
+            minute: "2-digit",
           });
+        } catch {
+          return iso;
+        }
       }
     </script>
   </body>
