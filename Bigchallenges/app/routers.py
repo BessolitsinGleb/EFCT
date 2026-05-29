@@ -287,14 +287,7 @@ def get_layer(layer: str,
 
 @router.get("/mooves", response_model=List[Mooves])
 def mooves(db: Session = Depends(get_db)):
-    stmt = select(Mooving).order_by(desc(Mooving.id)).limit(10)
+    stmt = select(Movement_info).order_by(desc(Movement_info.moove_id)).limit(10)
     res = db.execute(stmt).scalars().all()
 
     return res
-
-# @router.get("/mooves", response_model=List[Mooves])
-# def mooves(db: Session = Depends(get_db)):
-#     stmt = select(Movement_info).order_by(desc(Movement_info.moove_id)).limit(10)
-#     res = db.execute(stmt).scalars().all()
-
-#     return res

@@ -611,7 +611,7 @@
               <table id="moves_table">
                 <tbody>
                   <tr>
-                    <td colspan="3" class="subtle">
+                    <td colspan="7" class="subtle">
                       Нажмите «Обновить» для загрузки данных.
                     </td>
                   </tr>
@@ -855,14 +855,14 @@
 
       async function loadMoves() {
         const table = document.getElementById("moves_table");
-        table.innerHTML = `<tbody><tr><td colspan="3"><span class="loader"></span>Загрузка...</td></tr></tbody>`;
+        table.innerHTML = `<tbody><tr><td colspan="7"><span class="loader"></span>Загрузка...</td></tr></tbody>`;
 
         try {
           const res = await fetch(`${API}/container/mooves`);
           const data = await res.json();
 
           if (!res.ok) {
-            table.innerHTML = `<tbody><tr><td colspan="3" style="color:var(--accent)">Ошибка: ${JSON.stringify(data)}</td></tr></tbody>`;
+            table.innerHTML = `<tbody><tr><td colspan="7" style="color:var(--accent)">Ошибка: ${JSON.stringify(data)}</td></tr></tbody>`;
             return;
           }
 
@@ -878,26 +878,34 @@
                   (item) => `
                 <tr>
                   <td>${item.value ?? "—"}</td>
-                  <td>${formatDate(item.added_at)}</td>
-                  <td>${formatDate(item.deleted_at)}</td>
+                  <td>${item.moove_type ?? "—"}</td>
+                  <td>${item.path_num_from ?? "—"}</td>
+                  <td>${item.path_num_to ?? "—"}</td>
+                  <td>${item.cell_from ?? "—"}</td>
+                  <td>${item.cell_to ?? "—"}</td>
+                  <td>${formatDate(item.movement_time)}</td>
                 </tr>`,
                 )
                 .join("")
-            : `<tr><td colspan="3" class="subtle">Журнал пока пуст.</td></tr>`;
+            : `<tr><td colspan="7" class="subtle">Журнал пока пуст.</td></tr>`;
 
           table.innerHTML = `
             <thead>
               <tr>
                 <th>Контейнер</th>
-                <th>Дата загрузки</th>
-                <th>Дата выгрузки</th>
+                <th>Тип движения</th>
+                <th>Путь откуда пришел</th>
+                <th>Путь откуда ушел</th>
+                <th>Ячейка откуда ушел</th>
+                <th>Ячейка куда пришел</th>
+                <th>Время движения</th>
               </tr>
             </thead>
             <tbody>${bodyRows}</tbody>`;
 
           setStatus(`Журнал движений обновлён (${sorted.length} записей).`);
         } catch (e) {
-          table.innerHTML = `<tbody><tr><td colspan="3" style="color:var(--accent)">Ошибка соединения: ${e.message}</td></tr></tbody>`;
+          table.innerHTML = `<tbody><tr><td colspan="7" style="color:var(--accent)">Ошибка соединения: ${e.message}</td></tr></tbody>`;
         }
       }
 
