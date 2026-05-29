@@ -20,10 +20,10 @@ class AddCont(BaseModel):
 
 class Layer(BaseModel):
     cell_id: str
-    value: float
+    value: str
 
 class Mooves(BaseModel):
-    value: float
+    value: str
     moove_type: str
     path_num_from: int | None
     path_num_to: int | None

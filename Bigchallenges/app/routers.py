@@ -28,11 +28,15 @@ def add_cont(
 ):
     stmt = select(Coordinates).where(Coordinates.cell_id == data.cell_id)
     cell_ = db.execute(stmt).scalar_one_or_none()
+    cont = select(Coordinates).where(Coordinates.value == data.value)
+    cont = db.execute(cont).scalars().all()
 
+    if cont:
+        raise HTTPException(409, "This container number already exists in the database.")
     if not cell_:
         raise HTTPException(404, detail="not found")
     
-    if float(cell_.value) != 0.0:
+    if cell_.value != "0":
         raise HTTPException(403, "cell is not empty")
    
     cell = list(cell_.cell_id)
@@ -42,7 +46,7 @@ def add_cont(
 
         num = select(Coordinates).where(Coordinates.cell_id == a_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) == 0.0:
+        if num.value == "0":
             raise HTTPException(403, "there is no support under the cell")
         # if num.cont_type != cell_.cont_type:
         #     raise HTTPException(403, "The container type does not match the one below it")
@@ -55,18 +59,18 @@ def add_cont(
 
         num = select(Coordinates).where(Coordinates.cell_id == b_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) == 0.0:
+        if float(num.value) == "0":
             raise HTTPException(403, "there is no support under the cell")
         # if num.cont_type != cell_.cont_type:
         #     raise HTTPException(403, "The container type does not match the one below it")
         if num.size != data.size:
             raise HTTPException(403, "The container size does not match the one below it")
             
-    time = Mooving(value= cast(data.value, Float))
+    time = Mooving(value= data.value)
     db.add(time)
     
     movement = Movement_info(moove_type= "adding",
-                             value= cast(data.value, Float),
+                             value= data.value,
                              path_num_from= data.path_num_from,
                              movement_time= datetime.utcnow())
     db.add(movement)
@@ -74,7 +78,7 @@ def add_cont(
     update_stmt = (
         update(Coordinates)
         .where(Coordinates.cell_id == data.cell_id)
-        .values(value=cast(data.value, Float),
+        .values(value=data.value,
                 size=data.size,
                 company=data.company,
                 cont_type=data.cont_type) 
@@ -164,7 +168,7 @@ def load_cont(value: str,
 
         num = select(Coordinates).where(Coordinates.cell_id == b_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) != 0.0:
+        if num.value != "0":
             raise HTTPException(403, "the cell above is not free")
     
     if cell[0] == 'B':
@@ -173,10 +177,10 @@ def load_cont(value: str,
 
         num = select(Coordinates).where(Coordinates.cell_id == c_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) != 0.0:
+        if num.value != "0":
             raise HTTPException(403, "the cell above is not free")
         
-    res = update(Coordinates).where(cast(Coordinates.value, String) == value).values(value = cast(0, Float))
+    res = update(Coordinates).where(cast(Coordinates.value, String) == value).values(value = "0")
 
     time = update(Mooving).where(cast(Mooving.value, String) == value).values(deleted_at = datetime.utcnow())
 
@@ -207,9 +211,9 @@ def rearrange_cont(value: str,
         raise HTTPException(404, "not found")
     if not cell_to:
         raise HTTPException(404, "not found")
-    if float(cell_from.value) == 0.0:
+    if cell_from.value == "0":
         raise HTTPException(403, "cell is empty")
-    if float(cell_to.value) != 0.0:
+    if cell_to.value != "0":
         raise HTTPException(403, "cell is not empty")
     
     cell__ = list(cell_from.cell_id)
@@ -219,7 +223,7 @@ def rearrange_cont(value: str,
 
         num = select(Coordinates).where(Coordinates.cell_id == b_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) != 0.0:
+        if num.value != "0":
             raise HTTPException(403, "the cell above is not free")
     
     if cell__[0] == 'B':
@@ -228,7 +232,7 @@ def rearrange_cont(value: str,
 
         num = select(Coordinates).where(Coordinates.cell_id == c_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) != 0.0:
+        if num.value != "0":
             raise HTTPException(403, "the cell above is not free")
         
     cell_ = list(cell_to.cell_id)
@@ -238,7 +242,7 @@ def rearrange_cont(value: str,
 
         num = select(Coordinates).where(Coordinates.cell_id == a_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) == 0.0:
+        if num.value == "0":
             raise HTTPException(403, "there is no support under the cell")
         if num.size != cell_from.size:
             raise HTTPException(403, "The container size does not match the one below it")
@@ -249,16 +253,16 @@ def rearrange_cont(value: str,
 
         num = select(Coordinates).where(Coordinates.cell_id == b_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) == 0.0:
+        if num.value == "0":
             raise HTTPException(403, "there is no support under the cell")
         if num.size != cell_from.size:
             raise HTTPException(403, "The container size does not match the one below it")
         
-    rearrange_from = update(Coordinates).where(cast(Coordinates.value, String) == value).values(value = cast(0, Float),
+    rearrange_from = update(Coordinates).where(cast(Coordinates.value, String) == value).values(value = "0",
                                                                                                 size = 'null',
                                                                                                 company = 'empty',
                                                                                                 cont_type = 'null')
-    rearrange_to = update(Coordinates).where(Coordinates.cell_id == cell).values(value = cast(value, Float),
+    rearrange_to = update(Coordinates).where(Coordinates.cell_id == cell).values(value = value,
                                                                                  size = cell_from.size,
                                                                                  company = cell_from.company,
                                                                                  cont_type = cell_from.cont_type)
