@@ -6,7 +6,7 @@ from sqlalchemy import select, cast, String, update, desc
 from .schemas import FindCells, AddCont, Layer, Mooves, Recomend
 from typing import List
 from datetime import datetime, timezone
-from .mig_to_excel import migration, calculation_score, check_stack_size
+from .mig_to_excel import migration, calculation_score, check_stack_size, ask_ai
 
 router = APIRouter(prefix="/container", tags=['container'])
 
@@ -334,7 +334,37 @@ def recommend_cells(data: Recomend,
             key=lambda x: x["score"],
             reverse=True
         )
-        return {"top 5": recommendations[:5], "всего подходит": len(recommendations)}
+        top_5= recommendations[:5]
+        best = top_5[0]
+        best_cell = best['cell']
+        best_score = best['score']
+        explanation = ask_ai(f"""
+            Ты объясняешь решение системы контейнерного терминала.
+            информация о терминале:
+                             3 слоя(A, B, C, где нижний слой A, а C верхний),
+                             30 рядов и 3 пути возле них(1 путь возле 5 ряда, 2 путь возле 15 ряда, 3 путь возле 25 ряда),
+                             3 колонны(X, Y, Z, где X и Z предназначены для контейнеров с быстрой/средней скоростью отправки),
+                             
+            Контейнер:
+            Размер: {data.size}
+            Дней до отправки: {delta_time}
+            Путь отправления: {data.path_to}
+
+            Выбранная ячейка:
+            {best_cell}
+
+            Score:
+            {best_score}
+
+            Объясни кратко:
+            1. Почему выбрана эта ячейка.
+            2. Как влияет расстояние до пути.
+            3. Как влияет слой.
+            4. Как это уменьшает перестановки.
+
+            Ответ не длиннее 3 предложений.
+            """)
+        return {"top 5": recommendations[:5], "обьяснение": explanation}
     finally:
         db.close()
     

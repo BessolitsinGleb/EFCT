@@ -4,6 +4,7 @@ import os
 from sqlalchemy.orm import Session
 from .models import Coordinates as ContainerCell
 from .settings import settings
+import requests
 
 def migration():
     db_url = settings.DB_URL
@@ -157,3 +158,24 @@ def check_stack_size(
         )
 
     return False
+
+def ask_ai(prompt: str):
+
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "deepseek/deepseek-chat",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        }
+    )
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
