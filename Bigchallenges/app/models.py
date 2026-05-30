@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey
 from .database import Base
 from datetime import datetime
 from enum import Enum
@@ -45,12 +44,3 @@ class Movement_info(Base):
     cell_from: Mapped[str] = mapped_column(nullable=True)
     cell_to: Mapped[str] = mapped_column(nullable=True)
     movement_time: Mapped[datetime] = mapped_column(nullable=False)
-
-
-
-    """
-    const localDateValue = document.getElementById("sent_date_input").value; 
-        const dateObject = new Date(localDateValue);
-        const isoDateStr = dateObject.toISOString(); 
-        payload.sent_date = isoDateStr;
-    """

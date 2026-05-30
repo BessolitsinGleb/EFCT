@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from .database import get_db
 from sqlalchemy.orm import Session
 from .models import Coordinates, Mooving, Movement_info
-from sqlalchemy import select, cast, String, update, Float, desc
-from .schemas import FindCells, AddCont, Layer, Mooves
+from sqlalchemy import select, cast, String, update, desc
+from .schemas import FindCells, AddCont, Layer, Mooves, Recomend
 from typing import List
-from datetime import datetime
-from .mig_to_excel import migration
+from datetime import datetime, timezone
+from .mig_to_excel import migration, calculation_score, check_stack_size
 
 router = APIRouter(prefix="/container", tags=['container'])
 
@@ -295,3 +295,44 @@ def mooves(db: Session = Depends(get_db)):
     res = db.execute(stmt).scalars().all()
 
     return res
+
+@router.post("/recommend")
+def recommend_cells(data: Recomend,
+                    db: Session = Depends(get_db)):
+    EMPTY_CELL = "0"
+    try:
+        delta_time = (
+            data.sent_date - datetime.now(timezone.utc)
+        ).days
+        free_cells = db.query(Coordinates).filter(
+            Coordinates.value == EMPTY_CELL
+        ).all()
+        recommendations = []
+
+        for cell in free_cells:
+            if not check_stack_size(
+                db,
+                cell.cell_id,
+                data.size
+            ):
+                continue
+
+            score = calculation_score(
+                delta_time,
+                cell.cell_id,
+                data.path_to
+            )
+            recommendations.append({
+                "cell": cell.cell_id,
+                "score": score
+            })
+
+        recommendations.sort(
+            key=lambda x: x["score"],
+            reverse=True
+        )
+        return {"top 5": recommendations[:5], "всего подходит": len(recommendations)}
+    finally:
+        db.close()
+    
+    

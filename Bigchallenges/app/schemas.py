@@ -30,3 +30,8 @@ class Mooves(BaseModel):
     cell_from: str | None
     cell_to: str | None
     movement_time: datetime
+
+class Recomend(BaseModel):
+    size: int
+    path_to: int
+    sent_date: datetime

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 from sqlalchemy import create_engine
-
+from .settings import settings
 # data = np.zeros((3, 30, 3))
 
 # layers = ['A', 'B', 'C']
@@ -16,7 +16,7 @@ from sqlalchemy import create_engine
 #             value = data[i, j, k]
 #             rows.append([cell_id, layer, j+1, coord, value])
 
-engine = create_engine("postgresql+psycopg://aleksejbessolicin:password@localhost:5432/terminal")
+engine = create_engine(settings.DB_URL)
 
 # df = pd.DataFrame(rows, columns=['cell_id', 'layer', 'row_num', 'coord_type', 'value'])
 # df.to_sql('container_storage', engine, if_exists='replace', index=False)
