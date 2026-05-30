@@ -391,6 +391,87 @@
         margin-left: 8px;
       }
 
+      /* ── Recommend cards ── */
+      .rec-grid {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .rec-cell-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(16, 35, 50, 0.08);
+        transition: border-color 0.2s ease;
+      }
+
+      .rec-cell-card.top-1 {
+        border-color: rgba(211, 77, 45, 0.4);
+        background: rgba(255, 235, 230, 0.45);
+      }
+
+      .rec-cell-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        flex: 1;
+      }
+
+      .rec-cell-name {
+        font-weight: 700;
+        font-size: 1rem;
+        font-family: "Consolas", "Courier New", monospace;
+      }
+
+      .rec-cell-score {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .btn-select {
+        background: rgba(23, 50, 74, 0.1);
+        color: var(--text);
+        width: auto;
+        padding: 7px 13px;
+        font-size: 0.8rem;
+        border-radius: 10px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .btn-select:hover {
+        background: var(--accent);
+        color: white;
+      }
+
+      .rec-explain-box {
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: 14px;
+        background: rgba(207, 227, 246, 0.4);
+        border: 1px solid rgba(24, 56, 82, 0.14);
+      }
+
+      .rec-explain-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .rec-explain-text {
+        font-size: 0.9rem;
+        line-height: 1.55;
+        color: var(--text);
+      }
+
       /* ── Responsive ── */
       @media (max-width: 1024px) {
         .hero,
@@ -562,6 +643,27 @@
                 Переместить
               </button>
               <div class="result" id="res_re"></div>
+            </div>
+          </div>
+
+          <!-- 7. Рекомендация ячейки -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Рекомендация ячейки
+              <span class="endpoint-tag">POST /container/recommend</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="rec_size">Размер контейнера</label>
+              <input id="rec_size" type="number" placeholder="20 или 40" min="1" />
+              <label for="rec_path_to">Номер пути отправки</label>
+              <input id="rec_path_to" type="number" placeholder="1" min="1" />
+              <label for="rec_sent_date">Дата отправки</label>
+              <input id="rec_sent_date" type="datetime-local" />
+              <button class="btn-primary mt" onclick="recommend()">
+                Подобрать ячейки
+              </button>
+              <div id="rec_results"></div>
             </div>
           </div>
         </div>
@@ -907,6 +1009,118 @@
         } catch (e) {
           table.innerHTML = `<tbody><tr><td colspan="7" style="color:var(--accent)">Ошибка соединения: ${e.message}</td></tr></tbody>`;
         }
+      }
+
+      /* ── Recommend ── */
+
+      let _recInputData = null;
+
+      async function recommend() {
+        const sizeVal = document.getElementById("rec_size").value;
+        const pathVal = document.getElementById("rec_path_to").value;
+        const dateVal = document.getElementById("rec_sent_date").value;
+        const resultsDiv = document.getElementById("rec_results");
+
+        if (!sizeVal || !pathVal || !dateVal) {
+          resultsDiv.innerHTML =
+            '<div class="result error">Заполните все три поля.</div>';
+          return;
+        }
+
+        const size = parseInt(sizeVal);
+        const path_to = parseInt(pathVal);
+        const sent_date = new Date(dateVal).toISOString();
+
+        _recInputData = { size, path_to, sent_date_local: dateVal };
+
+        resultsDiv.innerHTML =
+          '<div class="result"><span class="loader"></span>Подбираем ячейки…</div>';
+
+        try {
+          const res = await fetch(`${API}/container/recommend`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ size, path_to, sent_date }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            resultsDiv.innerHTML = `<div class="result error">${JSON.stringify(data)}</div>`;
+            return;
+          }
+          renderRecommendations(data);
+          setStatus("Рекомендации ячеек получены.");
+        } catch (e) {
+          resultsDiv.innerHTML = `<div class="result error">Ошибка: ${e.message}</div>`;
+        }
+      }
+
+      function renderRecommendations(data) {
+        const resultsDiv = document.getElementById("rec_results");
+
+        if (!Array.isArray(data) || data.length === 0) {
+          resultsDiv.innerHTML = '<div class="result">Нет рекомендаций.</div>';
+          return;
+        }
+
+        const cards = data
+          .map((item, i) => {
+            const scoreStr =
+              typeof item.score === "number"
+                ? item.score.toFixed(4)
+                : item.score ?? "—";
+            return `
+              <div class="rec-cell-card${i === 0 ? " top-1" : ""}">
+                <div class="rec-cell-info">
+                  <span class="rec-cell-name">${item.cell ?? "—"}</span>
+                  <span class="rec-cell-score">Рейтинг: ${scoreStr}</span>
+                </div>
+                <button class="btn-select" onclick="selectCell('${item.cell}')">
+                  Выбрать
+                </button>
+              </div>`;
+          })
+          .join("");
+
+        const topExplain = data[0]["объяснение"] ?? data[0]["explanation"] ?? "";
+        const explainHtml = topExplain
+          ? `<div class="rec-explain-box">
+               <div class="rec-explain-label">Объяснение выбора лучшей ячейки</div>
+               <div class="rec-explain-text">${topExplain}</div>
+             </div>`
+          : "";
+
+        resultsDiv.innerHTML = `<div class="rec-grid">${cards}</div>${explainHtml}`;
+      }
+
+      function selectCell(cellId) {
+        if (!_recInputData) return;
+
+        document.getElementById("add_cell_id").value = cellId;
+        document.getElementById("add_size").value = _recInputData.size;
+        document.getElementById("add_path_to").value = _recInputData.path_to;
+        document.getElementById("add_send_date").value =
+          _recInputData.sent_date_local;
+
+        // Открываем карточку «Добавить контейнер», если закрыта
+        const addContent = document
+          .getElementById("add_cell_id")
+          .closest(".card")
+          .querySelector(".card-content");
+        const addArrow = document
+          .getElementById("add_cell_id")
+          .closest(".card")
+          .querySelector(".arrow");
+        if (!addContent.classList.contains("open")) {
+          addContent.classList.add("open");
+          addArrow.style.transform = "rotate(180deg)";
+        }
+
+        document
+          .getElementById("add_cell_id")
+          .closest(".card")
+          .scrollIntoView({ behavior: "smooth", block: "start" });
+
+        setStatus(`Ячейка ${cellId} выбрана — данные перенесены в форму добавления.`);
       }
 
       function formatDate(iso) {
