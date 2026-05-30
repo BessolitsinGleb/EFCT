@@ -81,7 +81,10 @@ def add_cont(
         .values(value=data.value,
                 size=data.size,
                 company=data.company,
-                cont_type=data.cont_type) 
+                cont_type=data.cont_type,
+                sent_date=data.sent_date,
+                path_num_from=data.path_num_from,
+                path_num_to=data.path_num_to) 
     )
 
     db.execute(update_stmt)
