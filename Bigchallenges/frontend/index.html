@@ -1083,9 +1083,14 @@
                   <span class="rec-cell-name">${item.cell ?? "—"}</span>
                   <span class="rec-cell-score">Рейтинг: ${scoreStr}</span>
                 </div>
-                <button class="btn-select" onclick="selectCell('${item.cell}')">
-                  Выбрать
-                </button>
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                  <button class="btn-select" onclick="selectCell('${item.cell}')">
+                    Добавить
+                  </button>
+                  <button class="btn-select" onclick="selectCellRearrange('${item.cell}')">
+                    Переместить
+                  </button>
+                </div>
               </div>`;
           })
           .join("");
@@ -1132,6 +1137,21 @@
         setStatus(
           `Ячейка ${cellId} выбрана — данные перенесены в форму добавления.`,
         );
+      }
+
+      function selectCellRearrange(cellId) {
+        document.getElementById("re_cell").value = cellId;
+
+        const card = document.getElementById("re_cell").closest(".card");
+        const content = card.querySelector(".card-content");
+        const arrow = card.querySelector(".arrow");
+        if (!content.classList.contains("open")) {
+          content.classList.add("open");
+          arrow.style.transform = "rotate(180deg)";
+        }
+
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+        setStatus(`Ячейка ${cellId} выбрана — перенесена в форму перестановки.`);
       }
 
       function formatDate(iso) {
