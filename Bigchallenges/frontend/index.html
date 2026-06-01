@@ -535,7 +535,10 @@
             </div>
             <div class="card-content">
               <label for="find_cells_value">Номер контейнера</label>
-              <input id="find_cells_value" placeholder="Например, 208" />
+              <input
+                id="find_cells_value"
+                placeholder="Введите номер контейнера"
+              />
               <button class="btn-primary mt" onclick="findCells()">
                 Выполнить
               </button>
@@ -552,15 +555,15 @@
             </div>
             <div class="card-content">
               <label for="add_cell_id">Ячейка</label>
-              <input id="add_cell_id" placeholder="Например, BX5" />
+              <input id="add_cell_id" placeholder="Номер ячейки" />
               <label for="add_value">Номер контейнера</label>
-              <input id="add_value" placeholder="Например, 7001" />
+              <input id="add_value" placeholder="Номер контейнера" />
               <label for="add_company">Компания</label>
               <input id="add_company" placeholder="Название компании" />
               <label for="add_size">Размер</label>
-              <input id="add_size" placeholder="20ft / 40ft" />
+              <input id="add_size" placeholder="Размер контейнера" />
               <label for="add_cont_type">Тип контейнера</label>
-              <input id="add_cont_type" placeholder="dry / reefer / tank" />
+              <input id="add_cont_type" placeholder="Тип контейнера" />
               <label for="add_send_date">Дата отправки</label>
               <input id="add_send_date" type="datetime-local" />
               <label for="add_path_from">Маршрут (откуда, номер)</label>
@@ -583,7 +586,7 @@
             </div>
             <div class="card-content">
               <label for="check_num">Номер контейнера</label>
-              <input id="check_num" placeholder="Например, 31" />
+              <input id="check_num" placeholder="Номер контейнера" />
               <button class="btn-primary mt" onclick="checkContainer()">
                 Проверить
               </button>
@@ -600,7 +603,7 @@
             </div>
             <div class="card-content">
               <label for="find_cont_cell">ID ячейки</label>
-              <input id="find_cont_cell" placeholder="Например, AY4" />
+              <input id="find_cont_cell" placeholder="Номер ячейки" />
               <button class="btn-primary mt" onclick="findContainer()">
                 Найти
               </button>
@@ -617,7 +620,7 @@
             </div>
             <div class="card-content">
               <label for="loading_value">Номер контейнера</label>
-              <input id="loading_value" placeholder="Например, 96" />
+              <input id="loading_value" placeholder="Номер контейнера" />
               <label for="loading_path">Номер пути</label>
               <input id="loading_path" type="number" placeholder="1" min="1" />
               <button class="btn-primary mt" onclick="loading()">
@@ -636,9 +639,9 @@
             </div>
             <div class="card-content">
               <label for="re_value">Номер контейнера</label>
-              <input id="re_value" placeholder="Например, 103" />
+              <input id="re_value" placeholder="Номер контейнера" />
               <label for="re_cell">Новая ячейка</label>
-              <input id="re_cell" placeholder="Например, BX28" />
+              <input id="re_cell" placeholder="Номер ячейки" />
               <button class="btn-primary mt" onclick="rearrangement()">
                 Переместить
               </button>
@@ -655,7 +658,12 @@
             </div>
             <div class="card-content">
               <label for="rec_size">Размер контейнера</label>
-              <input id="rec_size" type="number" placeholder="20 или 40" min="1" />
+              <input
+                id="rec_size"
+                type="number"
+                placeholder="Размер контейнера"
+                min="1"
+              />
               <label for="rec_path_to">Номер пути отправки</label>
               <input id="rec_path_to" type="number" placeholder="1" min="1" />
               <label for="rec_sent_date">Дата отправки</label>
@@ -1068,7 +1076,7 @@
             const scoreStr =
               typeof item.score === "number"
                 ? item.score.toFixed(4)
-                : item.score ?? "—";
+                : (item.score ?? "—");
             return `
               <div class="rec-cell-card${i === 0 ? " top-1" : ""}">
                 <div class="rec-cell-info">
@@ -1121,7 +1129,9 @@
           .closest(".card")
           .scrollIntoView({ behavior: "smooth", block: "start" });
 
-        setStatus(`Ячейка ${cellId} выбрана — данные перенесены в форму добавления.`);
+        setStatus(
+          `Ячейка ${cellId} выбрана — данные перенесены в форму добавления.`,
+        );
       }
 
       function formatDate(iso) {

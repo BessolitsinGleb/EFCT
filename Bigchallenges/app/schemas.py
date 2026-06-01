@@ -35,5 +35,3 @@ class Recomend(BaseModel):
     size: int
     path_to: int
     sent_date: datetime
-
-"""я люблю тебя"""
