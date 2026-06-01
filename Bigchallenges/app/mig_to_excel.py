@@ -130,7 +130,7 @@ def check_stack_size(
         if a_cell.value == EMPTY_CELL:
             return False
 
-        return int(a_cell.size) == int(size)
+        return a_cell.size == size
 
     # слой C
     if layer == "C":
@@ -152,10 +152,7 @@ def check_stack_size(
         if b_cell.value == EMPTY_CELL:
             return False
 
-        return (
-            int(a_cell.size) == int(size)
-            and int(b_cell.size) == int(size)
-        )
+        return a_cell.size == size and b_cell.size == size
 
     return False
 

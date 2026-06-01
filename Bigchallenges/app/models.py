@@ -13,7 +13,7 @@ class Coordinates(Base):
     coord_type: Mapped[str] = mapped_column(nullable=False)
     value: Mapped[str] = mapped_column(default='0')
     company: Mapped[str] = mapped_column(nullable=False)
-    size: Mapped[str] = mapped_column(nullable=False)
+    size: Mapped[int | None] = mapped_column(nullable=True)
     cont_type: Mapped[str] = mapped_column(nullable=False)
     sent_date: Mapped[datetime] = mapped_column(nullable=True)
     path_num_from: Mapped[int] = mapped_column(nullable=True)

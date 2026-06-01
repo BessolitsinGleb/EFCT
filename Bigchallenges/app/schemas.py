@@ -4,15 +4,15 @@ from datetime import datetime
 class FindCells(BaseModel):
     cell_id: str
     cont_type: str
-    size: str
+    size: int
     sent_date: datetime | None
     path_num_to: int | None
-    
+
 class AddCont(BaseModel):
     cell_id: str
     value: str
     company: str
-    size: str
+    size: int
     cont_type: str
     sent_date: datetime | None
     path_num_from: int | None
@@ -35,3 +35,5 @@ class Recomend(BaseModel):
     size: int
     path_to: int
     sent_date: datetime
+
+"""я люблю тебя"""

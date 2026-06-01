@@ -262,7 +262,7 @@ def rearrange_cont(value: str,
             raise HTTPException(403, "The container size does not match the one below it")
         
     rearrange_from = update(Coordinates).where(cast(Coordinates.value, String) == value).values(value = "0",
-                                                                                                size = 'null',
+                                                                                                size = None,
                                                                                                 company = 'empty',
                                                                                                 cont_type = 'null')
     rearrange_to = update(Coordinates).where(Coordinates.cell_id == cell).values(value = value,
@@ -334,7 +334,9 @@ def recommend_cells(data: Recomend,
             key=lambda x: x["score"],
             reverse=True
         )
-        top_5= recommendations[:5]
+        top_5 = recommendations[:5]
+        if not top_5:
+            return {"top 5": [], "объяснение": "Нет подходящих свободных ячеек."}
         best = top_5[0]
         best_cell = best['cell']
         best_score = best['score']
@@ -364,7 +366,7 @@ def recommend_cells(data: Recomend,
 
             Ответ не длиннее 3 предложений.
             """)
-        return {"top 5": recommendations[:5], "обьяснение": explanation}
+        return {"top 5": top_5, "объяснение": explanation}
     finally:
         db.close()
     

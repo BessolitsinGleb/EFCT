@@ -812,7 +812,7 @@
           cell_id: document.getElementById("add_cell_id").value.trim(),
           value: document.getElementById("add_value").value.trim(),
           company: document.getElementById("add_company").value.trim(),
-          size: document.getElementById("add_size").value.trim(),
+          size: parseInt(document.getElementById("add_size").value) || 0,
           cont_type: document.getElementById("add_cont_type").value.trim(),
 
           sent_date: isoDateStr,
@@ -1056,13 +1056,14 @@
 
       function renderRecommendations(data) {
         const resultsDiv = document.getElementById("rec_results");
+        const items = Array.isArray(data) ? data : (data["top 5"] ?? []);
 
-        if (!Array.isArray(data) || data.length === 0) {
+        if (items.length === 0) {
           resultsDiv.innerHTML = '<div class="result">Нет рекомендаций.</div>';
           return;
         }
 
-        const cards = data
+        const cards = items
           .map((item, i) => {
             const scoreStr =
               typeof item.score === "number"
@@ -1081,7 +1082,7 @@
           })
           .join("");
 
-        const topExplain = data[0]["объяснение"] ?? data[0]["explanation"] ?? "";
+        const topExplain = data["объяснение"] ?? data["explanation"] ?? "";
         const explainHtml = topExplain
           ? `<div class="rec-explain-box">
                <div class="rec-explain-label">Объяснение выбора лучшей ячейки</div>
