@@ -4,7 +4,7 @@ from datetime import datetime
 class FindCells(BaseModel):
     cell_id: str
     cont_type: str
-    size: int
+    size: int | None
     sent_date: datetime | None
     path_num_to: int | None
 

@@ -25,7 +25,7 @@ def migration():
     except Exception as e:
         print(f"Ошибка: {e}")
 
-def calculation_score(delta_time, cell, path_from):
+def calculation_score(delta_time, cell, path_from, lower_delta_time):
     
     score = 0
     cell_list = list(cell)
@@ -43,7 +43,7 @@ def calculation_score(delta_time, cell, path_from):
 
     d = (abs(num_row - path_from))/25
 
-    if delta_time <= 4:
+    if delta_time <= 96:
 
         if layer == 'A':
             layer = 1
@@ -60,9 +60,13 @@ def calculation_score(delta_time, cell, path_from):
             column = 1
         
         score = (100*(1-d) + 60*(layer/3) + 20*column)/180
+
+        if (lower_delta_time is not None and lower_delta_time < delta_time):
+            score *= 0.5
+
         return round(score, 2)
         
-    elif 4 < delta_time <= 10:
+    elif 96 < delta_time <= 240:
 
         if layer == 'A':
             layer = 0.5
@@ -79,9 +83,13 @@ def calculation_score(delta_time, cell, path_from):
             column = 0.5
         
         score = (60*(1-d) + 40*layer + 10*column)/110
+
+        if (lower_delta_time is not None and lower_delta_time < delta_time):
+            score *= 0.5
+
         return round(score, 2)
     
-    elif delta_time > 10:
+    elif delta_time > 240:
 
         if layer == 'A':
             layer = 1
@@ -97,9 +105,13 @@ def calculation_score(delta_time, cell, path_from):
         elif column == 'Z':
             column = 0.5
 
-        d_ideal = abs(d - 7/25)
+        d_ideal = abs(d - 5/25)
 
         score = (30*(1-d_ideal) + 70*layer + 5*column)/105
+
+        if (lower_delta_time is not None and lower_delta_time < delta_time):
+            score *= 0.5
+            
         return round(score, 2)
 
 def check_stack_size(
@@ -121,10 +133,10 @@ def check_stack_size(
     if layer == "B":
 
         a_cell = db.query(ContainerCell).filter(
-            ContainerCell.cell_id == f"A{column}{row}"
+            ContainerCell.cell_id == f"A{''.join(cell_id_[1:])}"
         ).first()
 
-        if a_cell is None:
+        if not a_cell:
             return False
 
         if a_cell.value == EMPTY_CELL:
@@ -136,14 +148,14 @@ def check_stack_size(
     if layer == "C":
 
         a_cell = db.query(ContainerCell).filter(
-            ContainerCell.cell_id == f"A{column}{row}"
+            ContainerCell.cell_id == f"A{''.join(cell_id_[1:])}"
         ).first()
 
         b_cell = db.query(ContainerCell).filter(
-            ContainerCell.cell_id == f"B{column}{row}"
+            ContainerCell.cell_id == f"B{''.join(cell_id_[1:])}"
         ).first()
 
-        if a_cell is None or b_cell is None:
+        if not a_cell or not b_cell:
             return False
 
         if a_cell.value == EMPTY_CELL:

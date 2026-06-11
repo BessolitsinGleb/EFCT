@@ -1151,7 +1151,9 @@
         }
 
         card.scrollIntoView({ behavior: "smooth", block: "start" });
-        setStatus(`Ячейка ${cellId} выбрана — перенесена в форму перестановки.`);
+        setStatus(
+          `Ячейка ${cellId} выбрана — перенесена в форму перестановки.`,
+        );
       }
 
       function formatDate(iso) {

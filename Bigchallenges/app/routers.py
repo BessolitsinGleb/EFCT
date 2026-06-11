@@ -183,10 +183,16 @@ def load_cont(value: str,
         if num.value != "0":
             raise HTTPException(403, "the cell above is not free")
         
-    res = update(Coordinates).where(cast(Coordinates.value, String) == value).values(value = "0")
+    res = update(Coordinates).where(cast(Coordinates.value, String) == value).values(value = "0",
+                                                                                    size = None,
+                                                                                    company = 'empty',
+                                                                                    cont_type = 'null',
+                                                                                    path_num_to = None,
+                                                                                    path_num_from = None,
+                                                                                    sent_date = None)
 
     time = update(Mooving).where(cast(Mooving.value, String) == value).values(deleted_at = datetime.utcnow())
-
+    
     movement = Movement_info(moove_type= "loading",
                              value= value,
                              path_num_to= path_num,
@@ -264,11 +270,17 @@ def rearrange_cont(value: str,
     rearrange_from = update(Coordinates).where(cast(Coordinates.value, String) == value).values(value = "0",
                                                                                                 size = None,
                                                                                                 company = 'empty',
-                                                                                                cont_type = 'null')
+                                                                                                cont_type = 'null',
+                                                                                                path_num_to = None,
+                                                                                                path_num_from = None,
+                                                                                                sent_date = None)
     rearrange_to = update(Coordinates).where(Coordinates.cell_id == cell).values(value = value,
                                                                                  size = cell_from.size,
                                                                                  company = cell_from.company,
-                                                                                 cont_type = cell_from.cont_type)
+                                                                                 cont_type = cell_from.cont_type,
+                                                                                 path_num_to = cell_from.path_num_to,
+                                                                                 path_num_from = cell_from.path_num_from,
+                                                                                 sent_date = cell_from.sent_date)
     movement = Movement_info(moove_type= "rearrangement",
                              value= value,
                              cell_from= cell_from.cell_id,
@@ -298,32 +310,58 @@ def mooves(db: Session = Depends(get_db)):
     res = db.execute(stmt).scalars().all()
 
     return res
-
+# СЛОМАЛИСЬ
 @router.post("/recommend")
 def recommend_cells(data: Recomend,
                     db: Session = Depends(get_db)):
+    
     EMPTY_CELL = "0"
     try:
-        delta_time = (
-            data.sent_date - datetime.now(timezone.utc)
-        ).days
+        time_diff_data = data.sent_date - datetime.now(timezone.utc)
+        delta_time = round(time_diff_data.total_seconds() / 3600, 2)
+        # print(delta_time)
         free_cells = db.query(Coordinates).filter(
             Coordinates.value == EMPTY_CELL
         ).all()
         recommendations = []
+        lower_delta_time = None
 
         for cell in free_cells:
+            # print(cell.cell_id)
             if not check_stack_size(
                 db,
                 cell.cell_id,
-                data.size
+                int(data.size)
             ):
+                # print("not")
                 continue
 
+            list_cell = list(cell.cell_id)
+            
+            if list_cell[0] == 'B':
+
+                list_cell[0] = 'A'
+                lower_cell = ''.join(list_cell)
+                # print(lower_cell)
+                stmt = db.query(Coordinates).filter(Coordinates.cell_id == lower_cell)
+                lower_cell = stmt.first()
+                time_diff = lower_cell.sent_date.replace(tzinfo=None) - datetime.now().replace(tzinfo=None)
+                lower_delta_time = round(time_diff.total_seconds() / 3600, 2)
+            
+            elif list_cell[0] == 'C':
+                
+                list_cell[0] = 'B'
+                lower_cell = ''.join(list_cell)
+                stmt = db.query(Coordinates).filter(Coordinates.cell_id == lower_cell)
+                lower_cell = stmt.first()
+                time_diff = lower_cell.sent_date.replace(tzinfo=None) - datetime.now().replace(tzinfo=None)
+                lower_delta_time = round(time_diff.total_seconds() / 3600, 2)
+            # print(lower_delta_time)
             score = calculation_score(
                 delta_time,
                 cell.cell_id,
-                data.path_to
+                data.path_to,
+                lower_delta_time
             )
             recommendations.append({
                 "cell": cell.cell_id,
@@ -334,6 +372,7 @@ def recommend_cells(data: Recomend,
             key=lambda x: x["score"],
             reverse=True
         )
+        # print(recommendations)
         top_5 = recommendations[:5]
         if not top_5:
             return {"top 5": [], "объяснение": "Нет подходящих свободных ячеек."}
@@ -349,8 +388,9 @@ def recommend_cells(data: Recomend,
                              
             Контейнер:
             Размер: {data.size}
-            Дней до отправки: {delta_time}, если значение большое, контейнер будут стараться поставить в пределах 7 рядов от пути отправления
+            Дней до отправки: {delta_time}, если значение больше 7, контейнер будут стараться поставить в пределах 5 рядов от пути отправления
             Путь отправления: {data.path_to}
+            Выбранный слой: {list(best_cell)[0]}
 
             Выбранная ячейка:
             {best_cell}
