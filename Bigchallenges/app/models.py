@@ -44,3 +44,5 @@ class Movement_info(Base):
     cell_from: Mapped[str] = mapped_column(nullable=True)
     cell_to: Mapped[str] = mapped_column(nullable=True)
     movement_time: Mapped[datetime] = mapped_column(nullable=False)
+    company: Mapped[str] = mapped_column(nullable=False)
+    price: Mapped[int] = mapped_column(default=0)

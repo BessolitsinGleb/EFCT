@@ -6,7 +6,7 @@ from sqlalchemy import select, cast, String, update, desc
 from .schemas import FindCells, AddCont, Layer, Mooves, Recomend
 from typing import List
 from datetime import datetime, timezone
-from .mig_to_excel import migration, calculation_score, check_stack_size, ask_ai
+from .mig_to_excel import migration, calculation_score, check_stack_size, ask_ai, calculation_movement_price
 
 router = APIRouter(prefix="/container", tags=['container'])
 
@@ -69,10 +69,17 @@ def add_cont(
     time = Mooving(value= data.value)
     db.add(time)
     
+    price = calculation_movement_price(mov_type='adding',
+                                       cell_1=data.cell_id,
+                                       size= data.size,
+                                       path= data.path_num_from)
+    
     movement = Movement_info(moove_type= "adding",
                              value= data.value,
                              path_num_from= data.path_num_from,
-                             movement_time= datetime.utcnow())
+                             movement_time= datetime.utcnow(),
+                             company= data.company,
+                             price= price)
     db.add(movement)
 
     update_stmt = (
@@ -90,7 +97,7 @@ def add_cont(
     db.execute(update_stmt)
     db.commit()
     migration()
-    return {"status": "success", "cell": data.cell_id, "container": data.value}
+    return {"status": "success", "cell": data.cell_id, "container": data.value, "price": price}
 
 @router.get("/check")
 def check_cont(
@@ -193,17 +200,25 @@ def load_cont(value: str,
 
     time = update(Mooving).where(cast(Mooving.value, String) == value).values(deleted_at = datetime.utcnow())
     
+    price = calculation_movement_price(mov_type='loading',
+                                       cell_1=cont.cell_id,
+                                       size=cont.size,
+                                       path=path_num)
+    
     movement = Movement_info(moove_type= "loading",
                              value= value,
                              path_num_to= path_num,
-                             movement_time= datetime.utcnow())
+                             movement_time= datetime.utcnow(),
+                             company= cont.company,
+                             price= price)
     
     db.add(movement)
     db.execute(time)
     db.execute(res)
     db.commit()
     migration()
-    return {"status": "success"}
+    return {"status": "success",
+            "price": price}
 
 @router.post("/rearrangement")
 def rearrange_cont(value: str,
@@ -281,11 +296,18 @@ def rearrange_cont(value: str,
                                                                                  path_num_to = cell_from.path_num_to,
                                                                                  path_num_from = cell_from.path_num_from,
                                                                                  sent_date = cell_from.sent_date)
+    price = calculation_movement_price(mov_type='rearrangement',
+                                       size=cell_from.size,
+                                       cell_1=cell_from.cell_id,
+                                       cell_2=cell)
+    
     movement = Movement_info(moove_type= "rearrangement",
                              value= value,
                              cell_from= cell_from.cell_id,
                              cell_to= cell,
-                             movement_time= datetime.utcnow())
+                             movement_time= datetime.utcnow(),
+                             company= cell_from.company,
+                             price= price)
     db.add(movement)
     db.execute(rearrange_from)
     db.execute(rearrange_to)
@@ -294,7 +316,8 @@ def rearrange_cont(value: str,
     return {"status": "success",
             "container": value,
             "from": cell_from.cell_id,
-            "to": cell_to.cell_id}
+            "to": cell_to.cell_id,
+            "price": price}
 
 @router.get("/layer", response_model=List[Layer])
 def get_layer(layer: str,

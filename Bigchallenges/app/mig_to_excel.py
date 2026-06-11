@@ -188,3 +188,93 @@ def ask_ai(prompt: str):
     )
     response.raise_for_status()
     return response.json()["choices"][0]["message"]["content"]
+
+def calculation_movement_price(mov_type, size, cell_1, cell_2= None, path= None):
+    
+    row_price = 0
+    col_price = 0 
+    if size == 20:
+        power_price = 1
+    if size == 40:
+        power_price = 2
+
+    if mov_type == "adding" or mov_type == 'loading':
+
+        lay_price = 0
+        CONST_PRICE = 50 # цена за поднятие/опускание контейнера на/с транспорта
+        list_cell_1 = list(cell_1)
+        layer = list_cell_1[0]
+        column = list_cell_1[1]
+        row = int(''.join(list_cell_1[2:]))
+        
+        if path == 1:
+            path_to = 5
+        if path == 2:
+            path_to = 15
+        if path == 3:
+            path_to = 25
+
+        if layer == 'A':
+            lay_price = 3
+        if layer == 'B':
+            lay_price = 2
+        if layer == 'C':
+            lay_price = 1
+        
+        if column == 'X' or column == 'Z':
+            col_price = 2 
+        if column == 'Y':
+            col_price = 3
+        
+        row_price = abs(row - path_to)/25
+
+        price = power_price * (25 * lay_price + 35 * col_price + 100 * row_price + CONST_PRICE)
+        return price
+    
+    if mov_type == 'rearrangement':
+
+        lay_price_up = 0
+        lay_price_down = 0
+
+        list_cell_from = list(cell_1)
+        layer_from = list_cell_from[0]
+        column_from = list_cell_from[1]
+        if column_from == 'X':
+            column_from = 1
+        if column_from == 'Y':
+            column_from = 2
+        if column_from == 'Z':
+            column_from = 3
+        row_from = int(''.join(list_cell_from[2:]))
+
+        list_cell_to = list(cell_2)
+        layer_to = list_cell_to[0]
+        column_to = list_cell_to[1]
+        if column_to == 'X':
+            column_to = 1
+        if column_to == 'Y':
+            column_to = 2
+        if column_to == 'Z':
+            column_to = 3
+        row_to = int(''.join(list_cell_to[2:]))
+
+        row_price = abs(row_to - row_from)/29
+        
+        if layer_from == 'A':
+            lay_price_up = 3
+        if layer_from == 'B':
+            lay_price_up = 2
+        if layer_from == 'C':
+            lay_price_up = 1
+
+        if layer_to == 'A':
+            lay_price_down = 3
+        if layer_to == 'B':
+            lay_price_down = 2
+        if layer_to == 'C':
+            lay_price_down = 1
+        
+        col_price = abs(column_from - column_to)
+
+        price = power_price * (lay_price_up * 25 + lay_price_down * 25 + col_price * 50 + row_price * 500)
+        return round(price)
