@@ -35,3 +35,8 @@ class Recomend(BaseModel):
     size: int
     path_to: int
     sent_date: datetime
+
+class UploadData(BaseModel):
+    company: str
+    start_data: datetime
+    end_data: datetime

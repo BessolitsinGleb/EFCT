@@ -3,10 +3,10 @@ from .database import get_db
 from sqlalchemy.orm import Session
 from .models import Coordinates, Mooving, Movement_info
 from sqlalchemy import select, cast, String, update, desc
-from .schemas import FindCells, AddCont, Layer, Mooves, Recomend
+from .schemas import FindCells, AddCont, Layer, Mooves, Recomend, UploadData
 from typing import List
 from datetime import datetime, timezone
-from .mig_to_excel import migration, calculation_score, check_stack_size, ask_ai, calculation_movement_price
+from .mig_to_excel import migration, calculation_score, check_stack_size, ask_ai, calculation_movement_price, upload_company_mov
 
 router = APIRouter(prefix="/container", tags=['container'])
 
@@ -433,4 +433,11 @@ def recommend_cells(data: Recomend,
     finally:
         db.close()
     
+@router.post("/data_upload")
+def uploading_to_company(data: UploadData):
     
+    status = upload_company_mov(data.company, data.start_data, data.end_data)   
+    if status:
+        return {"status": "success"} 
+    else:
+        return {"status": "not success"}

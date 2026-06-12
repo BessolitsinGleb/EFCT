@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from .models import Coordinates as ContainerCell
 from .settings import settings
 import requests
+from datetime import datetime
 
 def migration():
     db_url = settings.DB_URL
@@ -24,6 +25,32 @@ def migration():
         
     except Exception as e:
         print(f"Ошибка: {e}")
+
+def upload_company_mov(company: str,
+                       start_data: datetime,
+                       end_data: datetime):
+    
+    start_data_req = start_data.strftime("%Y-%m-%d %H:%M:%S")
+    end_data_req = end_data.strftime("%Y-%m-%d %H:%M:%S")
+    start_data_name = start_data.strftime('%y.%m.%d')
+    end_data_name = end_data.strftime('%y.%m.%d')
+
+    db_url = settings.DB_URL
+
+    try:
+        engine = create_engine(db_url)
+        query = f"SELECT * FROM movement_information WHERE company = '{company}' AND movement_time BETWEEN '{start_data_req}' AND '{end_data_req}';"
+        df = pd.read_sql_query(query, con=engine)
+
+        filename = f"{company}_reporting_from_{start_data_name}_to_{end_data_name}.csv"
+        if os.path.exists(filename):
+            os.remove(filename)
+        df.to_csv(filename, index=False)
+        return True
+    except Exception as e:
+        print(f"error {e}")
+        return False
+            
 
 def calculation_score(delta_time, cell, path_from, lower_delta_time):
     
