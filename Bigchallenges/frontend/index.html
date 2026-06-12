@@ -679,7 +679,7 @@
           <div class="card">
             <div class="card-header" onclick="toggle(this)">
               Загрузка данных
-              <span class="endpoint-tag">POST /container/upload_data</span>
+              <span class="endpoint-tag">POST /container/data_upload</span>
               <span class="arrow">▼</span>
             </div>
             <div class="card-content">
@@ -909,7 +909,7 @@
           end_data: new Date(endRaw).toISOString(),
         };
 
-        apiPost("/container/upload_data", body, "res_upload_data");
+        apiPost("/container/data_upload", body, "res_upload_data");
       }
 
       /* ── Layer table ── */
