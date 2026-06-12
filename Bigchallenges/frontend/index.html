@@ -674,6 +674,27 @@
               <div id="rec_results"></div>
             </div>
           </div>
+
+          <!-- 8. Загрузка данных -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Загрузка данных
+              <span class="endpoint-tag">POST /container/upload_data</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="upload_company">Компания</label>
+              <input id="upload_company" placeholder="Название компании" />
+              <label for="upload_start_data">Дата начала</label>
+              <input id="upload_start_data" type="datetime-local" />
+              <label for="upload_end_data">Дата окончания</label>
+              <input id="upload_end_data" type="datetime-local" />
+              <button class="btn-primary mt" onclick="uploadData()">
+                Загрузить
+              </button>
+              <div class="result" id="res_upload_data"></div>
+            </div>
+          </div>
         </div>
         <!-- /controls -->
 
@@ -868,6 +889,27 @@
           null,
           "res_re",
         );
+      }
+
+      function uploadData() {
+        const company = document.getElementById("upload_company").value.trim();
+        const startRaw = document.getElementById("upload_start_data").value;
+        const endRaw = document.getElementById("upload_end_data").value;
+
+        if (!company || !startRaw || !endRaw) {
+          const el = document.getElementById("res_upload_data");
+          el.textContent = "Заполните все поля.";
+          el.className = "result error";
+          return;
+        }
+
+        const body = {
+          company,
+          start_data: new Date(startRaw).toISOString(),
+          end_data: new Date(endRaw).toISOString(),
+        };
+
+        apiPost("/container/upload_data", body, "res_upload_data");
       }
 
       /* ── Layer table ── */
