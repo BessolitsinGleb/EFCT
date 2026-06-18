@@ -1,4 +1,0 @@
-moove_id,moove_type,value,path_num_from,path_num_to,cell_from,cell_to,movement_time,company,price
-59,adding,PRICE1111,1.0,,,,2026-06-11 12:09:54.425370,fesco,0
-60,rearrangement,PRICE1111,,,AX2,AX21,2026-06-11 12:12:58.478342,fesco,0
-61,loading,PRICE1111,,2.0,,,2026-06-11 12:13:17.373459,fesco,0

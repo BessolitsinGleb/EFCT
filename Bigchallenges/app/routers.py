@@ -1,20 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException
 from .database import get_db
 from sqlalchemy.orm import Session
-from .models import Coordinates, Mooving, Movement_info
+from .models import Coordinates, Mooving, Movement_info, User, Role
 from sqlalchemy import select, cast, String, update, desc
 from .schemas import FindCells, AddCont, Layer, Mooves, Recomend, UploadData
 from typing import List
 from datetime import datetime, timezone
 from .mig_to_excel import migration, calculation_score, check_stack_size, ask_ai, calculation_movement_price, upload_company_mov
+from .settings import get_current_user
 
 router = APIRouter(prefix="/container", tags=['container'])
 
 @router.get("/find_cells", response_model=List[FindCells])
 def find_cells(
     value: str,
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
+    
     list_ = select(Coordinates).where(cast(Coordinates.value, String) == str(value))
 
     values = db.execute(list_)
@@ -24,8 +29,12 @@ def find_cells(
 @router.post("/add")
 def add_cont(
     data: AddCont,
-    db: Session = Depends(get_db)
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
+    
     stmt = select(Coordinates).where(Coordinates.cell_id == data.cell_id)
     cell_ = db.execute(stmt).scalar_one_or_none()
     cont = select(Coordinates).where(Coordinates.value == data.value)
@@ -103,8 +112,12 @@ def add_cont(
 def check_cont(
     # type: str,
     cont_num: str,
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
+    
     list_cells = []
     list_conts = []
     cont = select(Coordinates).where(cast(Coordinates.value, String) == cont_num)
@@ -150,7 +163,11 @@ def check_cont(
 
 @router.get("/find_cont")
 def find_cont(cell_id: str,
+              user: User = Depends(get_current_user),
               db: Session = Depends(get_db)):
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
+    
     cell = select(Coordinates).where(Coordinates.cell_id == cell_id)
     cell = db.execute(cell).scalar_one_or_none()
 
@@ -162,7 +179,11 @@ def find_cont(cell_id: str,
 @router.post("/loading")
 def load_cont(value: str,
               path_num: int,
+              user: User = Depends(get_current_user),
               db: Session = Depends(get_db)):
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
+    
     stmt = select(Coordinates).where(cast(Coordinates.value, String) == value)
     cont = db.execute(stmt).scalar_one_or_none()
 
@@ -223,7 +244,10 @@ def load_cont(value: str,
 @router.post("/rearrangement")
 def rearrange_cont(value: str,
                    cell: str,
+                   user: User = Depends(get_current_user),
                    db: Session = Depends(get_db)):
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
     
     stmt = select(Coordinates).where(cast(Coordinates.value, String) == value)
     cell_from = db.execute(stmt).scalar_one_or_none()
@@ -321,23 +345,30 @@ def rearrange_cont(value: str,
 
 @router.get("/layer", response_model=List[Layer])
 def get_layer(layer: str,
-          db: Session = Depends(get_db)):
+              current_user=Depends(get_current_user),
+              db: Session = Depends(get_db)):
     stmt = select(Coordinates).where(Coordinates.layer == layer)
     lay = db.execute(stmt).scalars().all()
 
     return lay
 
 @router.get("/mooves", response_model=List[Mooves])
-def mooves(db: Session = Depends(get_db)):
+def mooves(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
+    
     stmt = select(Movement_info).order_by(desc(Movement_info.moove_id)).limit(10)
     res = db.execute(stmt).scalars().all()
 
     return res
-# СЛОМАЛИСЬ
+
 @router.post("/recommend")
 def recommend_cells(data: Recomend,
+                    user: User = Depends(get_current_user),
                     db: Session = Depends(get_db)):
-    
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
+
     EMPTY_CELL = "0"
     try:
         time_diff_data = data.sent_date - datetime.now(timezone.utc)
@@ -434,7 +465,10 @@ def recommend_cells(data: Recomend,
         db.close()
     
 @router.post("/data_upload")
-def uploading_to_company(data: UploadData):
+def uploading_to_company(data: UploadData, user: User = Depends(get_current_user)):
+    
+    if user.role != Role.transceiver:
+        raise HTTPException(403, detail="you are not the transceiver")
     
     status = upload_company_mov(data.company, data.start_data, data.end_data)   
     if status:

@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 from sqlalchemy import create_engine
-from .settings import settings
+from .core import settings
+
 # data = np.zeros((3, 30, 3))
 
 # layers = ['A', 'B', 'C']

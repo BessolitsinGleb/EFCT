@@ -7,3 +7,11 @@ pandas
 uvicorn
 asyncpg
 psycopg2-binary
+passlib
+python-jose
+python-multipart
+argon2_cffi
+uvicorn[standart]
+websockets
+httpx
+asyncio
