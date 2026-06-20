@@ -666,11 +666,26 @@
         white-space: nowrap;
       }
 
-      .status-pending { background: rgba(23,50,74,0.08); color: var(--muted); }
-      .status-sent { background: rgba(207,227,246,0.7); color: #1a4a6e; }
-      .status-in_progress { background: rgba(255,193,7,0.2); color: #7a5c00; }
-      .status-done { background: rgba(40,167,80,0.15); color: #1a7a3c; }
-      .status-failed { background: rgba(211,77,45,0.15); color: var(--accent-dark); }
+      .status-pending {
+        background: rgba(23, 50, 74, 0.08);
+        color: var(--muted);
+      }
+      .status-sent {
+        background: rgba(207, 227, 246, 0.7);
+        color: #1a4a6e;
+      }
+      .status-in_progress {
+        background: rgba(255, 193, 7, 0.2);
+        color: #7a5c00;
+      }
+      .status-done {
+        background: rgba(40, 167, 80, 0.15);
+        color: #1a7a3c;
+      }
+      .status-failed {
+        background: rgba(211, 77, 45, 0.15);
+        color: var(--accent-dark);
+      }
 
       .btn-send-inline {
         background: #183852;
@@ -980,7 +995,11 @@
               <button class="btn-primary mt" onclick="createTask()">
                 Создать задание
               </button>
-              <div class="result" id="res_create_task" style="display: none"></div>
+              <div
+                class="result"
+                id="res_create_task"
+                style="display: none"
+              ></div>
             </div>
           </div>
         </div>
@@ -1576,7 +1595,7 @@
         list.innerHTML =
           '<p class="subtle"><span class="loader"></span>Загрузка...</p>';
         try {
-          const res = await fetch(API + "/cran/operators/online", {
+          const res = await fetch(API + "/cran/crane-operators/online", {
             headers: authHeaders(),
           });
           const data = await res.json();
@@ -1588,8 +1607,7 @@
             return;
           }
           if (!Array.isArray(data) || data.length === 0) {
-            list.innerHTML =
-              '<p class="subtle">Нет крановщиков онлайн.</p>';
+            list.innerHTML = '<p class="subtle">Нет крановщиков онлайн.</p>';
             return;
           }
           list.innerHTML = data
@@ -1612,7 +1630,8 @@
       function selectOperator(id) {
         document.getElementById("task_assigned_to").value = id;
         const taskContent = document.getElementById("task_card_content");
-        const taskArrow = taskContent.previousElementSibling.querySelector(".arrow");
+        const taskArrow =
+          taskContent.previousElementSibling.querySelector(".arrow");
         if (!taskContent.classList.contains("open")) {
           taskContent.classList.add("open");
           taskArrow.style.transform = "rotate(180deg)";
@@ -1783,8 +1802,7 @@
             return;
           }
           if (!Array.isArray(data) || data.length === 0) {
-            container.innerHTML =
-              '<p class="subtle">Заданий пока нет.</p>';
+            container.innerHTML = '<p class="subtle">Заданий пока нет.</p>';
             return;
           }
           container.innerHTML = data
@@ -1799,12 +1817,10 @@
       }
 
       function renderMyTaskCard(task) {
-        const statusLabel =
-          TASK_STATUS_LABEL[task.status] || task.status;
+        const statusLabel = TASK_STATUS_LABEL[task.status] || task.status;
         const actionsHtml = (task.actions || [])
           .map((a) => {
-            const typeLabel =
-              ACTION_TYPE_LABEL[a.action_type] || a.action_type;
+            const typeLabel = ACTION_TYPE_LABEL[a.action_type] || a.action_type;
             const aLabel = TASK_STATUS_LABEL[a.status] || a.status;
             return `
             <div class="action-item-row">

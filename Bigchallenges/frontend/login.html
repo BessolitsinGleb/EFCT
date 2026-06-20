@@ -263,11 +263,7 @@
         <button class="btn-primary mt" onclick="doRegister()">
           Зарегистрироваться
         </button>
-        <div
-          class="result error"
-          id="res_register"
-          style="display: none"
-        ></div>
+        <div class="result error" id="res_register" style="display: none"></div>
       </div>
     </div>
 
@@ -319,9 +315,7 @@
       }
 
       async function doLogin() {
-        const username = document
-          .getElementById("login_username")
-          .value.trim();
+        const username = document.getElementById("login_username").value.trim();
         const password = document.getElementById("login_password").value;
         if (!username || !password) {
           showResult("res_login", "Заполните все поля.", true);
@@ -343,11 +337,7 @@
           });
           const data = await res.json();
           if (!res.ok) {
-            showResult(
-              "res_login",
-              data.detail || JSON.stringify(data),
-              true,
-            );
+            showResult("res_login", data.detail || JSON.stringify(data), true);
             return;
           }
           localStorage.setItem("token", data.access_token);
@@ -373,7 +363,7 @@
           '<span class="loader"></span>Регистрация...';
 
         try {
-          const res = await fetch(API + "/user/register", {
+          const res = await fetch(API + "/user/regis", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ user_name: username, password, role }),
@@ -405,8 +395,7 @@
           if (!loginRes.ok) {
             showResult(
               "res_register",
-              "Зарегистрировано, но ошибка входа: " +
-                (loginData.detail || ""),
+              "Зарегистрировано, но ошибка входа: " + (loginData.detail || ""),
               true,
             );
             return;

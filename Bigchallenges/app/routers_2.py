@@ -96,4 +96,4 @@ def get_online_operators(user: User = Depends(get_current_user)):
         raise HTTPException(403, detail="you are not the transceiver")
     
     online_ids = manager.get_online_users()
-    return {"online": online_ids, "count": len(online_ids)}
+    return {"id": online_ids} #, "count": len(online_ids)}
