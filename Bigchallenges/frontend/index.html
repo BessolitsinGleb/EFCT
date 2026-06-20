@@ -944,7 +944,7 @@
           <div class="card">
             <div class="card-header" onclick="toggle(this)">
               Онлайн-крановщики
-              <span class="endpoint-tag">GET /cran/operators/online</span>
+              <span class="endpoint-tag">GET /crane-operators/online</span>
               <span class="arrow">▼</span>
             </div>
             <div class="card-content">
@@ -1604,7 +1604,7 @@
         list.innerHTML =
           '<p class="subtle"><span class="loader"></span>Загрузка...</p>';
         try {
-          const res = await fetch(API + "/cran/operators/online", {
+          const res = await fetch(API + "/cran/crane-operators/online", {
             headers: authHeaders(),
           });
           const data = await res.json();

@@ -345,7 +345,7 @@ def rearrange_cont(value: str,
 
 @router.get("/layer", response_model=List[Layer])
 def get_layer(layer: str,
-              current_user=Depends(get_current_user),
+            #   current_user=Depends(get_current_user),
               db: Session = Depends(get_db)):
     stmt = select(Coordinates).where(Coordinates.layer == layer)
     lay = db.execute(stmt).scalars().all()
@@ -353,9 +353,9 @@ def get_layer(layer: str,
     return lay
 
 @router.get("/mooves", response_model=List[Mooves])
-def mooves(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user.role != Role.transceiver:
-        raise HTTPException(403, detail="you are not the transceiver")
+def mooves(db: Session = Depends(get_db)):      # user: User = Depends(get_current_user),
+    # if user.role != Role.transceiver:
+    #     raise HTTPException(403, detail="you are not the transceiver")
     
     stmt = select(Movement_info).order_by(desc(Movement_info.moove_id)).limit(10)
     res = db.execute(stmt).scalars().all()

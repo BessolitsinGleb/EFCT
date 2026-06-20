@@ -49,9 +49,11 @@ def list_my_tasks(
 ):
     query = db.query(Task)
     if assigned_to_me:
-        query = query.filter(Task.assigned_to == current_user.user_id)
+        query = query.filter(Task.assigned_to == current_user.user_id,
+                             Task.status != TaskStatus.completed)#.order_by(Task.id.desc()).limit(5)
     else:
-        query = query.filter(Task.created_by == current_user.user_id)
+        query = query.filter(Task.created_by == current_user.user_id,
+                             Task.status != TaskStatus.completed)#.order_by(Task.id.desc()).limit(5)
     return query.all()
 
 
