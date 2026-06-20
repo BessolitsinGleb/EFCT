@@ -472,6 +472,225 @@
         color: var(--text);
       }
 
+      /* ── User Bar ── */
+      .user-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(23, 50, 74, 0.97);
+        backdrop-filter: blur(10px);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 24px;
+        gap: 16px;
+      }
+
+      .user-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .user-bar-title {
+        font-size: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        opacity: 0.9;
+      }
+
+      .user-bar-name {
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      .role-badge {
+        background: rgba(211, 77, 45, 0.85);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 3px 9px;
+        border-radius: 8px;
+      }
+
+      .btn-logout {
+        background: rgba(255, 255, 255, 0.12);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 7px 14px;
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        transition: background 0.18s;
+        width: auto;
+      }
+
+      .btn-logout:hover {
+        background: rgba(255, 255, 255, 0.22);
+        transform: none;
+      }
+
+      /* ── Operator items ── */
+      .operator-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(207, 227, 246, 0.35);
+        border: 1px solid rgba(16, 35, 50, 0.08);
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+      }
+
+      .operator-item:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ── Action rows in task form ── */
+      .action-row {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        background: rgba(207, 227, 246, 0.18);
+      }
+
+      .action-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .action-row-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .btn-remove {
+        background: rgba(211, 77, 45, 0.12);
+        color: var(--accent);
+        border: 0;
+        border-radius: 8px;
+        padding: 2px 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        width: auto;
+        font-weight: 700;
+        transition: background 0.18s;
+      }
+
+      .btn-remove:hover {
+        background: rgba(211, 77, 45, 0.25);
+        transform: none;
+      }
+
+      /* ── Task cards (my tasks list) ── */
+      .task-card {
+        background: rgba(255, 255, 255, 0.65);
+        border: 1px solid rgba(16, 35, 50, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+
+      .task-card:last-child {
+        margin-bottom: 0;
+      }
+
+      .task-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: rgba(23, 50, 74, 0.05);
+        flex-wrap: wrap;
+        font-size: 0.88rem;
+      }
+
+      .task-id {
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .task-meta {
+        color: var(--muted);
+        font-size: 0.82rem;
+        flex: 1;
+      }
+
+      .action-item-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 16px;
+        border-top: 1px solid rgba(16, 35, 50, 0.06);
+        font-size: 0.84rem;
+        flex-wrap: wrap;
+      }
+
+      .action-type-badge {
+        background: rgba(23, 50, 74, 0.1);
+        color: var(--text);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 2px 7px;
+        border-radius: 6px;
+        white-space: nowrap;
+      }
+
+      .status-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        padding: 2px 8px;
+        border-radius: 7px;
+        white-space: nowrap;
+      }
+
+      .status-pending { background: rgba(23,50,74,0.08); color: var(--muted); }
+      .status-sent { background: rgba(207,227,246,0.7); color: #1a4a6e; }
+      .status-in_progress { background: rgba(255,193,7,0.2); color: #7a5c00; }
+      .status-done { background: rgba(40,167,80,0.15); color: #1a7a3c; }
+      .status-failed { background: rgba(211,77,45,0.15); color: var(--accent-dark); }
+
+      .btn-send-inline {
+        background: #183852;
+        color: white;
+        border: 0;
+        border-radius: 10px;
+        padding: 7px 14px;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        width: auto;
+        transition: background 0.18s;
+      }
+
+      .btn-send-inline:hover {
+        background: #10293d;
+        transform: translateY(-1px);
+      }
+
       /* ── Responsive ── */
       @media (max-width: 1024px) {
         .hero,
@@ -497,6 +716,16 @@
     </style>
   </head>
   <body>
+    <!-- ═══ USER BAR ═══ -->
+    <header class="user-bar">
+      <div class="user-bar-left">
+        <span class="user-bar-title">ЭДКТ</span>
+        <span class="user-bar-name" id="ub_name">—</span>
+        <span class="role-badge">Приёмосдатчик</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Выйти</button>
+    </header>
+
     <div class="page">
       <!-- ═══ HERO ═══ -->
       <section class="hero">
@@ -695,6 +924,65 @@
               <div class="result" id="res_upload_data"></div>
             </div>
           </div>
+
+          <!-- 9. Онлайн-крановщики -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Онлайн-крановщики
+              <span class="endpoint-tag">GET /cran/operators/online</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <button class="btn-secondary mt" onclick="loadOnlineOperators()">
+                Обновить список
+              </button>
+              <div id="operators_list" class="mt">
+                <p class="subtle">Нажмите «Обновить список».</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 10. Создать задание -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Создать задание
+              <span class="endpoint-tag">POST /cran/tasks</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content" id="task_card_content">
+              <label for="task_assigned_to">Назначить крановщику (ID)</label>
+              <input
+                id="task_assigned_to"
+                type="number"
+                placeholder="ID крановщика"
+              />
+
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-top: 16px;
+                  margin-bottom: 8px;
+                "
+              >
+                <label style="margin: 0">Действия</label>
+                <button
+                  class="btn-ghost"
+                  style="width: auto; padding: 6px 12px; font-size: 0.82rem"
+                  onclick="addActionRow()"
+                >
+                  + Добавить действие
+                </button>
+              </div>
+              <div id="actions_list"></div>
+
+              <button class="btn-primary mt" onclick="createTask()">
+                Создать задание
+              </button>
+              <div class="result" id="res_create_task" style="display: none"></div>
+            </div>
+          </div>
         </div>
         <!-- /controls -->
 
@@ -748,6 +1036,26 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Мои задания -->
+          <div class="table-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Мои задания</h2>
+                <p>Задания, созданные вами, и их текущий статус.</p>
+              </div>
+              <button
+                class="btn-secondary"
+                style="width: auto"
+                onclick="loadMyTasks()"
+              >
+                Обновить
+              </button>
+            </div>
+            <div id="my_tasks_container">
+              <p class="subtle">Нажмите «Обновить» для загрузки.</p>
             </div>
           </div>
         </div>
@@ -1211,6 +1519,312 @@
         } catch {
           return iso;
         }
+      }
+
+      /* ══════════════════════════════════════════
+         AUTH + USER INFO
+      ══════════════════════════════════════════ */
+
+      function authHeaders() {
+        const token = localStorage.getItem("token");
+        return token ? { Authorization: "Bearer " + token } : {};
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        location.href = "login.html";
+      }
+
+      async function initAuth() {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          location.href = "login.html";
+          return;
+        }
+        try {
+          const res = await fetch(API + "/user/me", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (!res.ok) {
+            logout();
+            return;
+          }
+          const user = await res.json();
+          if (user.role === "crane_operator") {
+            location.href = "crane.html";
+            return;
+          }
+          const name =
+            user.user_name || user.username || user.name || "ID " + user.id;
+          document.getElementById("ub_name").textContent = name;
+          loadOnlineOperators();
+          loadMyTasks();
+        } catch {
+          logout();
+        }
+      }
+
+      initAuth();
+
+      /* ══════════════════════════════════════════
+         ONLINE OPERATORS
+      ══════════════════════════════════════════ */
+
+      async function loadOnlineOperators() {
+        const list = document.getElementById("operators_list");
+        list.innerHTML =
+          '<p class="subtle"><span class="loader"></span>Загрузка...</p>';
+        try {
+          const res = await fetch(API + "/cran/operators/online", {
+            headers: authHeaders(),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            list.innerHTML =
+              '<p class="subtle" style="color:var(--accent)">' +
+              JSON.stringify(data) +
+              "</p>";
+            return;
+          }
+          if (!Array.isArray(data) || data.length === 0) {
+            list.innerHTML =
+              '<p class="subtle">Нет крановщиков онлайн.</p>';
+            return;
+          }
+          list.innerHTML = data
+            .map(
+              (id) => `
+            <div class="operator-item">
+              <span>Крановщик #${id}</span>
+              <button class="btn-select" onclick="selectOperator(${id})">Выбрать</button>
+            </div>`,
+            )
+            .join("");
+        } catch (e) {
+          list.innerHTML =
+            '<p class="subtle" style="color:var(--accent)">Ошибка: ' +
+            e.message +
+            "</p>";
+        }
+      }
+
+      function selectOperator(id) {
+        document.getElementById("task_assigned_to").value = id;
+        const taskContent = document.getElementById("task_card_content");
+        const taskArrow = taskContent.previousElementSibling.querySelector(".arrow");
+        if (!taskContent.classList.contains("open")) {
+          taskContent.classList.add("open");
+          taskArrow.style.transform = "rotate(180deg)";
+        }
+        taskContent.scrollIntoView({ behavior: "smooth", block: "start" });
+        setStatus("Выбран крановщик #" + id + " для нового задания.");
+      }
+
+      /* ══════════════════════════════════════════
+         CREATE TASK — dynamic action rows
+      ══════════════════════════════════════════ */
+
+      let _actionIdx = 0;
+
+      function addActionRow() {
+        _actionIdx++;
+        const idx = _actionIdx;
+        const container = document.getElementById("actions_list");
+        const row = document.createElement("div");
+        row.className = "action-row";
+        row.id = "action_row_" + idx;
+        row.innerHTML = `
+          <div class="action-row-header">
+            <span>Действие ${idx}</span>
+            <button class="btn-remove" onclick="removeActionRow(${idx})">✕</button>
+          </div>
+          <label>Тип действия</label>
+          <select id="act_type_${idx}">
+            <option value="load">Погрузка</option>
+            <option value="add">Добавление</option>
+            <option value="rear">Перестановка</option>
+          </select>
+          <label>Номер контейнера</label>
+          <input id="act_cont_${idx}" placeholder="Номер контейнера" />
+          <label>Откуда</label>
+          <input id="act_from_${idx}" placeholder="Локация откуда" />
+          <label>Куда</label>
+          <input id="act_to_${idx}" placeholder="Локация куда" />
+        `;
+        container.appendChild(row);
+      }
+
+      function removeActionRow(idx) {
+        const row = document.getElementById("action_row_" + idx);
+        if (row) row.remove();
+      }
+
+      async function createTask() {
+        const assignedTo = parseInt(
+          document.getElementById("task_assigned_to").value,
+        );
+        const resEl = document.getElementById("res_create_task");
+
+        if (!assignedTo) {
+          resEl.style.display = "block";
+          resEl.textContent = "Укажите ID крановщика.";
+          resEl.className = "result error";
+          return;
+        }
+
+        const rows = document.querySelectorAll(".action-row");
+        if (rows.length === 0) {
+          resEl.style.display = "block";
+          resEl.textContent = "Добавьте хотя бы одно действие.";
+          resEl.className = "result error";
+          return;
+        }
+
+        const actions = Array.from(rows).map((row) => {
+          const idx = row.id.replace("action_row_", "");
+          return {
+            action_type: document.getElementById("act_type_" + idx).value,
+            cont_num: document.getElementById("act_cont_" + idx).value.trim(),
+            from_loc: document.getElementById("act_from_" + idx).value.trim(),
+            to_loc: document.getElementById("act_to_" + idx).value.trim(),
+          };
+        });
+
+        resEl.style.display = "block";
+        resEl.innerHTML = '<span class="loader"></span>Создание задания...';
+        resEl.className = "result";
+
+        try {
+          const res = await fetch(API + "/cran/tasks", {
+            method: "POST",
+            headers: {
+              ...authHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ assigned_to: assignedTo, actions }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            resEl.textContent = data.detail || JSON.stringify(data);
+            resEl.className = "result error";
+            return;
+          }
+          const taskId = data.id;
+          resEl.className = "result success";
+          resEl.innerHTML = `Задание #${taskId} создано! &nbsp;<button class="btn-send-inline" onclick="sendTask(${taskId})">Отправить крановщику</button>`;
+          setStatus("Задание #" + taskId + " создано.");
+          loadMyTasks();
+        } catch (e) {
+          resEl.textContent = "Ошибка: " + e.message;
+          resEl.className = "result error";
+        }
+      }
+
+      async function sendTask(taskId) {
+        const resEl = document.getElementById("res_create_task");
+        resEl.innerHTML =
+          '<span class="loader"></span>Отправка задания #' + taskId + "...";
+        resEl.className = "result";
+        try {
+          const res = await fetch(API + "/cran/tasks/" + taskId + "/send", {
+            method: "POST",
+            headers: authHeaders(),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            resEl.textContent =
+              "Ошибка отправки: " + (data.detail || JSON.stringify(data));
+            resEl.className = "result error";
+            return;
+          }
+          resEl.textContent = "Задание #" + taskId + " отправлено крановщику!";
+          resEl.className = "result success";
+          setStatus("Задание #" + taskId + " отправлено.");
+          loadMyTasks();
+        } catch (e) {
+          resEl.textContent = "Ошибка: " + e.message;
+          resEl.className = "result error";
+        }
+      }
+
+      /* ══════════════════════════════════════════
+         MY TASKS LIST
+      ══════════════════════════════════════════ */
+
+      const TASK_STATUS_LABEL = {
+        pending: "Ожидает",
+        sent: "Отправлено",
+        in_progress: "В работе",
+        done: "Завершено",
+        failed: "Ошибка",
+      };
+
+      const ACTION_TYPE_LABEL = {
+        load: "Погрузка",
+        add: "Добавление",
+        rear: "Перестановка",
+      };
+
+      async function loadMyTasks() {
+        const container = document.getElementById("my_tasks_container");
+        container.innerHTML =
+          '<p class="subtle"><span class="loader"></span>Загрузка заданий...</p>';
+        try {
+          const res = await fetch(API + "/cran/tasks", {
+            headers: authHeaders(),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            container.innerHTML =
+              '<p class="subtle" style="color:var(--accent)">Ошибка: ' +
+              JSON.stringify(data) +
+              "</p>";
+            return;
+          }
+          if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML =
+              '<p class="subtle">Заданий пока нет.</p>';
+            return;
+          }
+          container.innerHTML = data
+            .map((task) => renderMyTaskCard(task))
+            .join("");
+        } catch (e) {
+          container.innerHTML =
+            '<p class="subtle" style="color:var(--accent)">Ошибка соединения: ' +
+            e.message +
+            "</p>";
+        }
+      }
+
+      function renderMyTaskCard(task) {
+        const statusLabel =
+          TASK_STATUS_LABEL[task.status] || task.status;
+        const actionsHtml = (task.actions || [])
+          .map((a) => {
+            const typeLabel =
+              ACTION_TYPE_LABEL[a.action_type] || a.action_type;
+            const aLabel = TASK_STATUS_LABEL[a.status] || a.status;
+            return `
+            <div class="action-item-row">
+              <span class="action-type-badge">${typeLabel}</span>
+              <span style="font-family:'Consolas',monospace;font-size:0.85rem;font-weight:700">${a.cont_num || "—"}</span>
+              <span class="subtle">${a.from_loc || "—"} → ${a.to_loc || "—"}</span>
+              <span class="status-badge status-${a.status}">${aLabel}</span>
+            </div>`;
+          })
+          .join("");
+
+        return `
+        <div class="task-card">
+          <div class="task-card-header">
+            <span class="task-id">Задание #${task.id}</span>
+            <span class="task-meta">Крановщик: #${task.assigned_to} · ${(task.actions || []).length} действий</span>
+            <span class="status-badge status-${task.status}">${statusLabel}</span>
+          </div>
+          ${actionsHtml}
+        </div>`;
       }
     </script>
   </body>

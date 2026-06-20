@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ЭДКТ — Крановщик</title>
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #f4efe4 0%, #dfe8f3 100%);
+        --panel: rgba(255, 252, 247, 0.92);
+        --panel-dark: #17324a;
+        --line: rgba(23, 50, 74, 0.16);
+        --text: #102332;
+        --muted: #556b7c;
+        --accent: #d34d2d;
+        --accent-dark: #a9381d;
+        --empty: #f7f1e8;
+        --busy: #cfe3f6;
+        --shadow: 0 20px 45px rgba(19, 41, 60, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      /* ── User Bar ── */
+      .user-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(23, 50, 74, 0.97);
+        backdrop-filter: blur(10px);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        gap: 16px;
+      }
+
+      .user-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .user-bar-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        opacity: 0.9;
+      }
+
+      .user-bar-name {
+        font-size: 0.95rem;
+        opacity: 0.85;
+      }
+
+      .role-badge {
+        background: rgba(211, 77, 45, 0.85);
+        color: white;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 3px 9px;
+        border-radius: 8px;
+      }
+
+      .ws-badge {
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+        letter-spacing: 0.05em;
+      }
+
+      .ws-connected {
+        background: rgba(40, 167, 80, 0.25);
+        color: #6ee496;
+        border: 1px solid rgba(40, 167, 80, 0.4);
+      }
+
+      .ws-disconnected {
+        background: rgba(211, 77, 45, 0.25);
+        color: #f4a89a;
+        border: 1px solid rgba(211, 77, 45, 0.4);
+      }
+
+      .btn-logout {
+        background: rgba(255, 255, 255, 0.12);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 7px 14px;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        transition: background 0.18s;
+        width: auto;
+      }
+
+      .btn-logout:hover {
+        background: rgba(255, 255, 255, 0.22);
+        transform: none;
+      }
+
+      /* ── Page ── */
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      /* ── Hero ── */
+      .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+        margin-bottom: 28px;
+      }
+
+      .hero-card,
+      .summary,
+      .table-panel {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hero-card {
+        padding: 28px;
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.6rem, 3vw, 2.6rem);
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      .summary {
+        padding: 24px;
+        display: grid;
+        gap: 12px;
+        align-content: start;
+      }
+
+      .summary-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+      }
+
+      /* ── Table panel ── */
+      .table-panel {
+        padding: 24px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .panel-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      /* ── Buttons ── */
+      button {
+        border-radius: 14px;
+        font: inherit;
+        border: 0;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          transform 0.18s ease,
+          background 0.18s ease;
+        width: auto;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-dark);
+      }
+
+      .btn-secondary {
+        background: #183852;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #10293d;
+      }
+
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.82rem;
+        border-radius: 10px;
+      }
+
+      .btn-start {
+        background: rgba(24, 56, 82, 0.12);
+        color: #183852;
+      }
+
+      .btn-start:hover {
+        background: #183852;
+        color: white;
+      }
+
+      .btn-done {
+        background: rgba(40, 167, 80, 0.12);
+        color: #1a7a3c;
+      }
+
+      .btn-done:hover {
+        background: rgba(40, 167, 80, 0.9);
+        color: white;
+      }
+
+      /* ── Task cards ── */
+      .task-card {
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(16, 35, 50, 0.1);
+        border-radius: 18px;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+
+      .task-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        background: rgba(23, 50, 74, 0.05);
+        border-bottom: 1px solid rgba(16, 35, 50, 0.07);
+        flex-wrap: wrap;
+      }
+
+      .task-id {
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .task-meta {
+        color: var(--muted);
+        font-size: 0.85rem;
+        flex: 1;
+      }
+
+      /* ── Action items ── */
+      .action-item {
+        display: grid;
+        grid-template-columns: auto 1fr 1fr auto auto;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 18px;
+        border-bottom: 1px solid rgba(16, 35, 50, 0.06);
+        font-size: 0.88rem;
+      }
+
+      .action-item:last-child {
+        border-bottom: 0;
+      }
+
+      .action-type-badge {
+        background: rgba(23, 50, 74, 0.1);
+        color: var(--text);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 3px 8px;
+        border-radius: 7px;
+        white-space: nowrap;
+      }
+
+      .action-cont {
+        font-family: "Consolas", monospace;
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+
+      .action-route {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      /* ── Status badges ── */
+      .status-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 3px 9px;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+
+      .status-pending {
+        background: rgba(23, 50, 74, 0.08);
+        color: var(--muted);
+      }
+
+      .status-sent {
+        background: rgba(207, 227, 246, 0.7);
+        color: #1a4a6e;
+      }
+
+      .status-in_progress {
+        background: rgba(255, 193, 7, 0.2);
+        color: #7a5c00;
+      }
+
+      .status-done {
+        background: rgba(40, 167, 80, 0.15);
+        color: #1a7a3c;
+      }
+
+      .status-failed {
+        background: rgba(211, 77, 45, 0.15);
+        color: var(--accent-dark);
+      }
+
+      /* ── Info box ── */
+      .info-box {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(16, 35, 50, 0.08);
+        font-size: 0.92rem;
+        min-height: 48px;
+        word-break: break-word;
+      }
+
+      /* ── Misc ── */
+      .subtle {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .loader {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(16, 35, 50, 0.15);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Toast notifications ── */
+      .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+      }
+
+      .toast {
+        background: var(--panel-dark);
+        color: white;
+        padding: 14px 18px;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        font-size: 0.9rem;
+        max-width: 320px;
+        pointer-events: auto;
+        animation: slideIn 0.3s ease;
+      }
+
+      .toast-title {
+        font-weight: 700;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.7;
+        margin-bottom: 4px;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(120%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        to {
+          transform: translateX(120%);
+          opacity: 0;
+        }
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 768px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .action-item {
+          grid-template-columns: auto 1fr;
+          gap: 6px;
+        }
+
+        .action-item .action-route,
+        .action-item .status-badge {
+          grid-column: span 2;
+        }
+
+        .action-item .action-btn-wrap {
+          grid-column: span 2;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ═══ USER BAR ═══ -->
+    <header class="user-bar">
+      <div class="user-bar-left">
+        <span class="user-bar-title">ЭДКТ</span>
+        <span class="user-bar-name" id="ub_name">—</span>
+        <span class="role-badge">Крановщик</span>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <span id="ws_badge" class="ws-badge ws-disconnected">● Отключён</span>
+        <button class="btn-logout" onclick="logout()">Выйти</button>
+      </div>
+    </header>
+
+    <div class="page">
+      <!-- ═══ HERO ═══ -->
+      <section class="hero">
+        <div class="hero-card">
+          <h1>Мои задания</h1>
+          <p>
+            Список заданий, назначенных вам. Получайте уведомления о новых
+            заданиях в реальном времени.
+          </p>
+          <div class="hero-actions">
+            <button class="btn-secondary" onclick="loadTasks()">
+              Обновить список
+            </button>
+          </div>
+        </div>
+        <aside class="summary">
+          <div class="summary-title">Статус</div>
+          <div class="info-box" id="status_box">Инициализация...</div>
+        </aside>
+      </section>
+
+      <!-- ═══ TASKS ═══ -->
+      <div class="table-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Задания</h2>
+            <p>Нажмите «Начать» или «Завершить» для смены статуса действия.</p>
+          </div>
+          <button class="btn-secondary" onclick="loadTasks()">Обновить</button>
+        </div>
+        <div id="tasks_list">
+          <p class="subtle">
+            <span class="loader"></span>Загрузка заданий...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TOAST CONTAINER ═══ -->
+    <div class="toast-container" id="toast_container"></div>
+
+    <script>
+      const API = "http://127.0.0.1:8000";
+      const WS_URL = "ws://127.0.0.1:8000/ws";
+
+      let ws = null;
+      let wsReconnectTimer = null;
+
+      // ── Auth guard ──
+      const token = localStorage.getItem("token");
+      if (!token) {
+        location.href = "login.html";
+      }
+
+      function authHeaders() {
+        return { Authorization: "Bearer " + token };
+      }
+
+      function logout() {
+        if (ws) ws.close();
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        location.href = "login.html";
+      }
+
+      function setStatus(msg) {
+        document.getElementById("status_box").textContent = msg;
+      }
+
+      // ── Init ──
+      async function init() {
+        try {
+          const res = await fetch(API + "/user/me", {
+            headers: authHeaders(),
+          });
+          if (!res.ok) {
+            logout();
+            return;
+          }
+          const user = await res.json();
+          if (user.role !== "crane_operator") {
+            location.href = "index.html";
+            return;
+          }
+          const name =
+            user.user_name || user.username || user.name || "ID " + user.id;
+          document.getElementById("ub_name").textContent = name;
+          setStatus("Добро пожаловать, " + name + "!");
+          connectWebSocket();
+          loadTasks();
+        } catch (e) {
+          logout();
+        }
+      }
+
+      // ── WebSocket ──
+      function connectWebSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+
+        ws = new WebSocket(WS_URL + "?token=" + encodeURIComponent(token));
+
+        ws.onopen = () => {
+          setBadge(true);
+          setStatus("WebSocket подключён. Ожидание заданий...");
+          clearTimeout(wsReconnectTimer);
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "new_task") {
+              showToast(
+                "Новое задание",
+                "Задание #" +
+                  msg.task_id +
+                  " — " +
+                  msg.actions_count +
+                  " действий",
+              );
+              setStatus("Получено новое задание #" + msg.task_id + ".");
+              loadTasks();
+            }
+          } catch {
+            // ignore non-JSON messages
+          }
+        };
+
+        ws.onclose = () => {
+          setBadge(false);
+          wsReconnectTimer = setTimeout(connectWebSocket, 3000);
+        };
+
+        ws.onerror = () => {
+          ws.close();
+        };
+      }
+
+      function setBadge(connected) {
+        const badge = document.getElementById("ws_badge");
+        badge.textContent = connected ? "● Онлайн" : "● Отключён";
+        badge.className =
+          "ws-badge " + (connected ? "ws-connected" : "ws-disconnected");
+      }
+
+      // ── Tasks ──
+      async function loadTasks() {
+        const container = document.getElementById("tasks_list");
+        container.innerHTML =
+          '<p class="subtle"><span class="loader"></span>Загрузка...</p>';
+        try {
+          const res = await fetch(
+            API + "/cran/tasks?assigned_to_me=true&status=sent",
+            { headers: authHeaders() },
+          );
+          const data = await res.json();
+          if (!res.ok) {
+            container.innerHTML =
+              '<p class="subtle" style="color:var(--accent)">Ошибка: ' +
+              JSON.stringify(data) +
+              "</p>";
+            return;
+          }
+          if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML =
+              '<p class="subtle">Заданий пока нет.</p>';
+            return;
+          }
+          container.innerHTML = data
+            .map((task) => renderTaskCard(task))
+            .join("");
+        } catch (e) {
+          container.innerHTML =
+            '<p class="subtle" style="color:var(--accent)">Ошибка соединения: ' +
+            e.message +
+            "</p>";
+        }
+      }
+
+      const STATUS_LABEL = {
+        pending: "Ожидает",
+        sent: "Отправлено",
+        in_progress: "В работе",
+        done: "Завершено",
+        failed: "Ошибка",
+      };
+
+      const ACTION_LABEL = {
+        load: "Погрузка",
+        add: "Добавление",
+        rear: "Перестановка",
+      };
+
+      function renderTaskCard(task) {
+        const statusLabel = STATUS_LABEL[task.status] || task.status;
+        const actionsHtml = (task.actions || [])
+          .map((a) => {
+            const statusClass = "status-" + a.status;
+            const aLabel = STATUS_LABEL[a.status] || a.status;
+            const typeLabel = ACTION_LABEL[a.action_type] || a.action_type;
+
+            let actionBtn = "";
+            if (a.status === "pending") {
+              actionBtn = `<div class="action-btn-wrap">
+                <button class="btn-sm btn-start" onclick="updateAction(${task.id},${a.id},'in_progress')">
+                  Начать
+                </button>
+              </div>`;
+            } else if (a.status === "in_progress") {
+              actionBtn = `<div class="action-btn-wrap">
+                <button class="btn-sm btn-done" onclick="updateAction(${task.id},${a.id},'done')">
+                  Завершить
+                </button>
+              </div>`;
+            } else {
+              actionBtn = '<div class="action-btn-wrap"></div>';
+            }
+
+            return `
+            <div class="action-item">
+              <span class="action-type-badge">${typeLabel}</span>
+              <span class="action-cont">${a.cont_num || "—"}</span>
+              <span class="action-route">${a.from_loc || "—"} → ${a.to_loc || "—"}</span>
+              <span class="status-badge ${statusClass}">${aLabel}</span>
+              ${actionBtn}
+            </div>`;
+          })
+          .join("");
+
+        return `
+        <div class="task-card">
+          <div class="task-card-header">
+            <span class="task-id">Задание #${task.id}</span>
+            <span class="task-meta">${(task.actions || []).length} действий</span>
+            <span class="status-badge status-${task.status}">${statusLabel}</span>
+          </div>
+          ${actionsHtml}
+        </div>`;
+      }
+
+      async function updateAction(taskId, actionId, newStatus) {
+        try {
+          const res = await fetch(
+            API + "/cran/tasks/" + taskId + "/actions/" + actionId,
+            {
+              method: "PATCH",
+              headers: {
+                ...authHeaders(),
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: newStatus }),
+            },
+          );
+          if (!res.ok) {
+            const data = await res.json();
+            showToast(
+              "Ошибка",
+              data.detail || "Не удалось обновить статус действия",
+            );
+            return;
+          }
+          setStatus(
+            "Действие " +
+              actionId +
+              " в задании #" +
+              taskId +
+              " → " +
+              (STATUS_LABEL[newStatus] || newStatus),
+          );
+          loadTasks();
+        } catch (e) {
+          showToast("Ошибка", e.message);
+        }
+      }
+
+      // ── Toast ──
+      function showToast(title, message) {
+        const container = document.getElementById("toast_container");
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.innerHTML = `<div class="toast-title">${title}</div><div>${message}</div>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.style.animation = "slideOut 0.3s ease forwards";
+          setTimeout(() => toast.remove(), 320);
+        }, 5000);
+      }
+
+      init();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ЭДКТ — Вход в систему</title>
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #f4efe4 0%, #dfe8f3 100%);
+        --panel: rgba(255, 252, 247, 0.92);
+        --line: rgba(23, 50, 74, 0.16);
+        --text: #102332;
+        --muted: #556b7c;
+        --accent: #d34d2d;
+        --accent-dark: #a9381d;
+        --shadow: 0 20px 45px rgba(19, 41, 60, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      .auth-card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+        padding: 36px 32px 32px;
+        margin: 20px;
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 2.8rem;
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0 0 28px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 4px;
+        background: rgba(23, 50, 74, 0.06);
+        border-radius: 14px;
+        padding: 4px;
+        margin-bottom: 24px;
+      }
+
+      .tab-btn {
+        flex: 1;
+        padding: 9px;
+        border: 0;
+        border-radius: 11px;
+        background: transparent;
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--muted);
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        transition:
+          background 0.2s,
+          color 0.2s;
+        width: auto;
+      }
+
+      .tab-btn.active {
+        background: white;
+        color: var(--text);
+        box-shadow: 0 2px 8px rgba(19, 41, 60, 0.1);
+      }
+
+      .tab-btn:hover:not(.active) {
+        color: var(--text);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: block;
+      }
+
+      label {
+        display: block;
+        margin: 12px 0 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      input,
+      select,
+      button {
+        width: 100%;
+        border-radius: 14px;
+        font: inherit;
+      }
+
+      input,
+      select {
+        border: 1px solid var(--line);
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.7);
+        color: var(--text);
+        outline: none;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      button {
+        border: 0;
+        padding: 13px 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          transform 0.18s ease,
+          opacity 0.18s ease,
+          background 0.18s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-dark);
+      }
+
+      .mt {
+        margin-top: 16px;
+      }
+
+      .result {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(16, 35, 50, 0.08);
+        font-size: 0.88rem;
+        word-break: break-word;
+      }
+
+      .result.error {
+        border-color: rgba(211, 77, 45, 0.35);
+        background: rgba(255, 235, 230, 0.6);
+      }
+
+      .result.success {
+        border-color: rgba(40, 167, 80, 0.35);
+        background: rgba(220, 255, 230, 0.6);
+      }
+
+      .loader {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(16, 35, 50, 0.15);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-card">
+      <h1>ЭДКТ</h1>
+      <p class="subtitle">Диспетчер контейнерного терминала</p>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('login')">
+          Вход
+        </button>
+        <button class="tab-btn" onclick="switchTab('register')">
+          Регистрация
+        </button>
+      </div>
+
+      <!-- Вход -->
+      <div id="tab-login" class="tab-panel active">
+        <label for="login_username">Имя пользователя</label>
+        <input
+          id="login_username"
+          placeholder="user_name"
+          autocomplete="username"
+        />
+        <label for="login_password">Пароль</label>
+        <input
+          id="login_password"
+          type="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+        />
+        <button class="btn-primary mt" onclick="doLogin()">Войти</button>
+        <div class="result error" id="res_login" style="display: none"></div>
+      </div>
+
+      <!-- Регистрация -->
+      <div id="tab-register" class="tab-panel">
+        <label for="reg_username">Имя пользователя</label>
+        <input
+          id="reg_username"
+          placeholder="user_name"
+          autocomplete="username"
+        />
+        <label for="reg_password">Пароль</label>
+        <input
+          id="reg_password"
+          type="password"
+          placeholder="••••••••"
+          autocomplete="new-password"
+        />
+        <label for="reg_role">Роль</label>
+        <select id="reg_role">
+          <option value="transceiver">Приёмосдатчик</option>
+          <option value="crane_operator">Крановщик</option>
+        </select>
+        <button class="btn-primary mt" onclick="doRegister()">
+          Зарегистрироваться
+        </button>
+        <div
+          class="result error"
+          id="res_register"
+          style="display: none"
+        ></div>
+      </div>
+    </div>
+
+    <script>
+      const API = "http://127.0.0.1:8000";
+
+      // Redirect if already authenticated
+      (async () => {
+        const token = localStorage.getItem("token");
+        if (token) await redirectByToken(token);
+      })();
+
+      function switchTab(name) {
+        const isLogin = name === "login";
+        document.querySelectorAll(".tab-btn").forEach((b, i) => {
+          b.classList.toggle("active", isLogin ? i === 0 : i === 1);
+        });
+        document
+          .getElementById("tab-login")
+          .classList.toggle("active", isLogin);
+        document
+          .getElementById("tab-register")
+          .classList.toggle("active", !isLogin);
+      }
+
+      function showResult(id, msg, isError) {
+        const el = document.getElementById(id);
+        el.style.display = "block";
+        el.textContent = msg;
+        el.className = "result " + (isError ? "error" : "success");
+      }
+
+      async function redirectByToken(token) {
+        try {
+          const res = await fetch(API + "/user/me", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (!res.ok) {
+            localStorage.removeItem("token");
+            return;
+          }
+          const user = await res.json();
+          localStorage.setItem("user", JSON.stringify(user));
+          location.href =
+            user.role === "crane_operator" ? "crane.html" : "index.html";
+        } catch {
+          localStorage.removeItem("token");
+        }
+      }
+
+      async function doLogin() {
+        const username = document
+          .getElementById("login_username")
+          .value.trim();
+        const password = document.getElementById("login_password").value;
+        if (!username || !password) {
+          showResult("res_login", "Заполните все поля.", true);
+          return;
+        }
+
+        showResult("res_login", "Вход...", false);
+        document.getElementById("res_login").innerHTML =
+          '<span class="loader"></span>Вход...';
+
+        const form = new FormData();
+        form.append("username", username);
+        form.append("password", password);
+
+        try {
+          const res = await fetch(API + "/user/login", {
+            method: "POST",
+            body: form,
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showResult(
+              "res_login",
+              data.detail || JSON.stringify(data),
+              true,
+            );
+            return;
+          }
+          localStorage.setItem("token", data.access_token);
+          showResult("res_login", "Успешно! Перенаправляем...", false);
+          await redirectByToken(data.access_token);
+        } catch (e) {
+          showResult("res_login", "Ошибка: " + e.message, true);
+        }
+      }
+
+      async function doRegister() {
+        const username = document.getElementById("reg_username").value.trim();
+        const password = document.getElementById("reg_password").value;
+        const role = document.getElementById("reg_role").value;
+        if (!username || !password) {
+          showResult("res_register", "Заполните все поля.", true);
+          return;
+        }
+
+        document.getElementById("res_register").style.display = "block";
+        document.getElementById("res_register").className = "result";
+        document.getElementById("res_register").innerHTML =
+          '<span class="loader"></span>Регистрация...';
+
+        try {
+          const res = await fetch(API + "/user/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_name: username, password, role }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showResult(
+              "res_register",
+              data.detail || JSON.stringify(data),
+              true,
+            );
+            return;
+          }
+
+          showResult(
+            "res_register",
+            "Зарегистрировано! Выполняем вход...",
+            false,
+          );
+
+          const form = new FormData();
+          form.append("username", username);
+          form.append("password", password);
+          const loginRes = await fetch(API + "/user/login", {
+            method: "POST",
+            body: form,
+          });
+          const loginData = await loginRes.json();
+          if (!loginRes.ok) {
+            showResult(
+              "res_register",
+              "Зарегистрировано, но ошибка входа: " +
+                (loginData.detail || ""),
+              true,
+            );
+            return;
+          }
+          localStorage.setItem("token", loginData.access_token);
+          await redirectByToken(loginData.access_token);
+        } catch (e) {
+          showResult("res_register", "Ошибка: " + e.message, true);
+        }
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        if (document.getElementById("tab-login").classList.contains("active"))
+          doLogin();
+        else doRegister();
+      });
+    </script>
+  </body>
+</html>
