@@ -1113,10 +1113,16 @@
         el.className = "result";
       }
 
+      function getToken() {
+        return localStorage.getItem("token") || "";
+      }
+
       async function apiGet(path, resultId) {
         showLoading(resultId);
         try {
-          const res = await fetch(API + path);
+          const res = await fetch(API + path, {
+            headers: { Authorization: "Bearer " + getToken() },
+          });
           const data = await res.json();
           setResult(resultId, data, !res.ok);
           if (res.ok) setStatus(`GET ${path} — OK`);
@@ -1130,9 +1136,12 @@
       async function apiPost(path, body, resultId) {
         showLoading(resultId);
         try {
-          const opts = { method: "POST" };
+          const opts = {
+            method: "POST",
+            headers: { Authorization: "Bearer " + getToken() },
+          };
           if (body) {
-            opts.headers = { "Content-Type": "application/json" };
+            opts.headers["Content-Type"] = "application/json";
             opts.body = JSON.stringify(body);
           }
           const res = await fetch(API + path, opts);
@@ -1595,7 +1604,7 @@
         list.innerHTML =
           '<p class="subtle"><span class="loader"></span>Загрузка...</p>';
         try {
-          const res = await fetch(API + "/cran/crane-operators/online", {
+          const res = await fetch(API + "/cran/operators/online", {
             headers: authHeaders(),
           });
           const data = await res.json();
@@ -1606,11 +1615,12 @@
               "</p>";
             return;
           }
-          if (!Array.isArray(data) || data.length === 0) {
+          const ids = Array.isArray(data) ? data : (data.id ?? []);
+          if (ids.length === 0) {
             list.innerHTML = '<p class="subtle">Нет крановщиков онлайн.</p>';
             return;
           }
-          list.innerHTML = data
+          list.innerHTML = ids
             .map(
               (id) => `
             <div class="operator-item">
@@ -1660,9 +1670,9 @@
           </div>
           <label>Тип действия</label>
           <select id="act_type_${idx}">
-            <option value="load">Погрузка</option>
-            <option value="add">Добавление</option>
-            <option value="rear">Перестановка</option>
+            <option value="LOAD">Погрузка</option>
+            <option value="ADD">Добавление</option>
+            <option value="REAR">Перестановка</option>
           </select>
           <label>Номер контейнера</label>
           <input id="act_cont_${idx}" placeholder="Номер контейнера" />
@@ -1780,6 +1790,9 @@
       };
 
       const ACTION_TYPE_LABEL = {
+        LOAD: "Погрузка",
+        ADD: "Добавление",
+        REAR: "Перестановка",
         load: "Погрузка",
         add: "Добавление",
         rear: "Перестановка",
