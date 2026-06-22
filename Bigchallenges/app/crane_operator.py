@@ -16,7 +16,7 @@ async def main(username: str, password: str):
             return
 
         token = response.json()["access_token"]
-        print(f"Токен получен для {username}")
+        # print(f"Токен получен для {username}")
 
     url = f"ws://localhost:8000/ws?token={token}"
     async with websockets.connect(url) as ws:

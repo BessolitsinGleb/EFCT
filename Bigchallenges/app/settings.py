@@ -201,8 +201,8 @@ from .core import settings
 from .database import sync_session
 
 def verify_token(token: str) -> User | None:
-    print(f"=== verify_token вызван ===")
-    print(f"Токен (первые 20 символов): {token[:20]}")
+    # print(f"=== verify_token вызван ===")
+    # print(f"Токен (первые 20 символов): {token[:20]}")
     try:
         payload = jwt.decode(
             token,
