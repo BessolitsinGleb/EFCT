@@ -957,7 +957,29 @@
             </div>
           </div>
 
-          <!-- 10. Создать задание -->
+          <!-- 10. Отправить задание по ID -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Отправить задание
+              <span class="endpoint-tag">POST /cran/tasks/{id}/send</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <label for="send_task_id">ID задания (статус draft)</label>
+              <input
+                id="send_task_id"
+                type="number"
+                placeholder="ID задания"
+                min="1"
+              />
+              <button class="btn-primary mt" onclick="sendTaskById()">
+                Отправить крановщику
+              </button>
+              <div class="result" id="res_send_task" style="display: none"></div>
+            </div>
+          </div>
+
+          <!-- 11. Создать задание -->
           <div class="card">
             <div class="card-header" onclick="toggle(this)">
               Создать задание
@@ -983,6 +1005,7 @@
               >
                 <label style="margin: 0">Действия</label>
                 <button
+                  id="add_action_btn"
                   class="btn-ghost"
                   style="width: auto; padding: 6px 12px; font-size: 0.82rem"
                   onclick="addActionRow()"
@@ -1682,11 +1705,15 @@
           <input id="act_to_${idx}" placeholder="Локация куда" />
         `;
         container.appendChild(row);
+        document.getElementById("add_action_btn").style.display = "none";
       }
 
       function removeActionRow(idx) {
         const row = document.getElementById("action_row_" + idx);
         if (row) row.remove();
+        if (document.querySelectorAll(".action-row").length === 0) {
+          document.getElementById("add_action_btn").style.display = "";
+        }
       }
 
       async function createTask() {
@@ -1743,6 +1770,39 @@
           resEl.className = "result success";
           resEl.innerHTML = `Задание #${taskId} создано! &nbsp;<button class="btn-send-inline" onclick="sendTask(${taskId})">Отправить крановщику</button>`;
           setStatus("Задание #" + taskId + " создано.");
+          loadMyTasks();
+        } catch (e) {
+          resEl.textContent = "Ошибка: " + e.message;
+          resEl.className = "result error";
+        }
+      }
+
+      async function sendTaskById() {
+        const taskId = parseInt(document.getElementById("send_task_id").value);
+        const resEl = document.getElementById("res_send_task");
+        resEl.style.display = "block";
+        if (!taskId) {
+          resEl.textContent = "Укажите ID задания.";
+          resEl.className = "result error";
+          return;
+        }
+        resEl.innerHTML = '<span class="loader"></span>Отправка задания #' + taskId + "...";
+        resEl.className = "result";
+        try {
+          const res = await fetch(API + "/cran/tasks/" + taskId + "/send", {
+            method: "POST",
+            headers: authHeaders(),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            resEl.textContent =
+              "Ошибка отправки: " + (data.detail || JSON.stringify(data));
+            resEl.className = "result error";
+            return;
+          }
+          resEl.textContent = "Задание #" + taskId + " отправлено крановщику!";
+          resEl.className = "result success";
+          setStatus("Задание #" + taskId + " отправлено.");
           loadMyTasks();
         } catch (e) {
           resEl.textContent = "Ошибка: " + e.message;
