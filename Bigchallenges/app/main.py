@@ -7,7 +7,7 @@ from .routers_2 import router as router_2
 from .users import router as user_router
 from .settings import manager, verify_token
 
-app = FastAPI(title="Прототип терминала")
+app = FastAPI(title="EFCT")
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,3 +41,16 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
 
 if '__main__'==__name__:
     uvicorn.run("main.app", host= "0.0.0.0")
+
+
+"""
+1. Добавить на страницу крановщика пульт управления краном(ехать по рельсам, движение кабины, опускать поднимать захват(забыл название), 
+    взять отпустить контейнер)
+
+2. Собрать где-то каким-то чудом терминал маленький и сделать реализацию пульта
+   2.1 закупить компоненты(хз какие, есп 32 точно типо для старта)
+   2.2 сделать платы, по электронике все сделать короче
+   2.3 напечатать где-то кран на рельзах и контейнеров несколько
+   2.4 добавить "точность движений" типо 1 клик сдвиг на опред растояние 
+   2.5 тестить 
+"""

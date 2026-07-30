@@ -1,8 +1,16 @@
-class Settings_():
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-    DB_URL = "postgresql+psycopg://aleksejbessolicin:password@localhost:5432/terminal"
-    SECRET_KEY = "TOP_SECRET"
-    JWT_ALGORITHM = "HS256"
-    OPENROUTER_API_KEY = "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"
-    
+class Settings_(BaseSettings):
+
+    DB_URL: str
+    SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    OPENROUTER_API_KEY: str
+
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
 settings = Settings_()

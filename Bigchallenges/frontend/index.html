@@ -975,7 +975,11 @@
               <button class="btn-primary mt" onclick="sendTaskById()">
                 Отправить крановщику
               </button>
-              <div class="result" id="res_send_task" style="display: none"></div>
+              <div
+                class="result"
+                id="res_send_task"
+                style="display: none"
+              ></div>
             </div>
           </div>
 
@@ -1448,7 +1452,10 @@
         try {
           const res = await fetch(`${API}/container/recommend`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + getToken(),
+            },
             body: JSON.stringify({ size, path_to, sent_date }),
           });
           const data = await res.json();
@@ -1786,7 +1793,8 @@
           resEl.className = "result error";
           return;
         }
-        resEl.innerHTML = '<span class="loader"></span>Отправка задания #' + taskId + "...";
+        resEl.innerHTML =
+          '<span class="loader"></span>Отправка задания #' + taskId + "...";
         resEl.className = "result";
         try {
           const res = await fetch(API + "/cran/tasks/" + taskId + "/send", {
