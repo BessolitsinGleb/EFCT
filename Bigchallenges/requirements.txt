@@ -11,7 +11,8 @@ passlib
 python-jose
 python-multipart
 argon2_cffi
-uvicorn[standart]
+uvicorn[standard]
 websockets
 httpx
-asyncio
+psycopg[binary]
+requests

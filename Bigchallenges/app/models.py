@@ -86,7 +86,7 @@ class Task(Base):
     created_by: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
     assigned_to: Mapped[int | None] = mapped_column(ForeignKey("users.user_id"))
     status: Mapped[TaskStatus] = mapped_column(SAEnum(TaskStatus), default=TaskStatus.draft)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)  # без скобок: время создания, а не запуска сервера
 
     actions: Mapped[list["TaskAction"]] = relationship(
         back_populates="task", order_by="TaskAction.order_index", cascade="all, delete-orphan"

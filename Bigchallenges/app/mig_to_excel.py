@@ -4,8 +4,25 @@ import os
 from sqlalchemy.orm import Session
 from .models import Coordinates as ContainerCell
 from .settings import settings
+import re
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
+from sqlalchemy import text
+
+
+def to_utc_naive(dt):
+    """Приводит дату к UTC без часового пояса — так даты хранятся в БД."""
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
+def hours_until(dt):
+    """Сколько часов осталось до даты dt (отрицательно, если дата прошла)."""
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    return round((to_utc_naive(dt) - now).total_seconds() / 3600, 2)
 
 def migration():
     db_url = settings.DB_URL
@@ -39,10 +56,15 @@ def upload_company_mov(company: str,
 
     try:
         engine = create_engine(db_url)
-        query = f"SELECT * FROM movement_information WHERE company = '{company}' AND movement_time BETWEEN '{start_data_req}' AND '{end_data_req}';"
-        df = pd.read_sql_query(query, con=engine)
+        # параметризованный запрос: раньше название компании подставлялось f-строкой (SQL-инъекция)
+        query = text("SELECT * FROM movement_information "
+                     "WHERE company = :company AND movement_time BETWEEN :start AND :end")
+        with engine.connect() as conn:
+            df = pd.read_sql_query(query, con=conn,
+                                   params={"company": company, "start": start_data_req, "end": end_data_req})
 
-        filename = f"{company}_reporting_from_{start_data_name}_to_{end_data_name}.csv"
+        safe_company = re.sub(r"[^\w\-]", "_", company)  # без «/», «..» и т. п. в имени файла
+        filename = f"{safe_company}_reporting_from_{start_data_name}_to_{end_data_name}.csv"
         if os.path.exists(filename):
             os.remove(filename)
         df.to_csv(filename, index=False)
@@ -195,6 +217,20 @@ def check_stack_size(
 
     return False
 
+def stack_is_valid(cells_by_id: dict, cell_id: str, size: int) -> bool:
+    """То же правило, что check_stack_size, но по заранее загруженной площадке (без запросов к БД):
+    на ярус B/C можно ставить только поверх занятых ячеек того же типоразмера."""
+    EMPTY_CELL = "0"
+    layer, rest = cell_id[0], cell_id[1:]
+    below = {"A": [], "B": ["A"], "C": ["A", "B"]}.get(layer)
+    if below is None:
+        return False
+    for lay in below:
+        c = cells_by_id.get(lay + rest)
+        if c is None or c.value == EMPTY_CELL or c.size != size:
+            return False
+    return True
+
 def ask_ai(prompt: str):
 
     response = requests.post(
@@ -211,7 +247,8 @@ def ask_ai(prompt: str):
                     "content": prompt
                 }
             ]
-        }
+        },
+        timeout=20,
     )
     response.raise_for_status()
     return response.json()["choices"][0]["message"]["content"]
@@ -220,10 +257,10 @@ def calculation_movement_price(mov_type, size, cell_1, cell_2= None, path= None)
     
     row_price = 0
     col_price = 0 
-    if size == 20:
-        power_price = 1
-    if size == 40:
-        power_price = 2
+    power_prices = {20: 1, 40: 2}
+    if size not in power_prices:
+        raise ValueError(f"unsupported container size: {size}")
+    power_price = power_prices[size]
 
     if mov_type == "adding" or mov_type == 'loading':
 
@@ -234,12 +271,10 @@ def calculation_movement_price(mov_type, size, cell_1, cell_2= None, path= None)
         column = list_cell_1[1]
         row = int(''.join(list_cell_1[2:]))
         
-        if path == 1:
-            path_to = 5
-        if path == 2:
-            path_to = 15
-        if path == 3:
-            path_to = 25
+        path_rows = {1: 5, 2: 15, 3: 25}
+        if path not in path_rows:
+            raise ValueError(f"unknown path: {path}")
+        path_to = path_rows[path]
 
         if layer == 'A':
             lay_price = 3

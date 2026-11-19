@@ -69,6 +69,8 @@ def update_action_status(
     action = db.get(TaskAction, action_id)
     if action is None or action.task_id != task_id:
         raise HTTPException(404, "Действие не найдено")
+    if action.task.assigned_to != current_user.user_id:
+        raise HTTPException(403, "Это задание назначено другому крановщику")
 
     if payload.status == ActionStatus.in_progress and action.started_at is None:
         action.started_at = datetime.utcnow()

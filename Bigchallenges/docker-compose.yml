@@ -1,12 +1,16 @@
+# Пароль и имя пользователя БД берутся из файла .env рядом с этим файлом (он в .gitignore):
+#   POSTGRES_USER=...
+#   POSTGRES_PASSWORD=...
+#   POSTGRES_DB=terminal
 services:
   db:
     image: postgres:15
     container_name: bigchallenges
     restart: always
     environment:
-      POSTGRES_USER: aleksejbessolicin #свой юзер
-      POSTGRES_PASSWORD: password #свой пароль
-      POSTGRES_DB: terminal # своя дб
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-terminal}
     ports:
       - "5432:5432"
     volumes:
@@ -17,8 +21,11 @@ services:
     container_name: api
     ports:
       - "8000:8000"
+    env_file:
+      - app/.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://aleksejbessolicin:password@localhost:5432/terminal # свою
+      # внутри docker-сети БД доступна по имени сервиса db, а не localhost
+      DB_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-terminal}
     depends_on:
       - db
 

@@ -5,8 +5,9 @@ from .models import Coordinates, Mooving, Movement_info, User, Role
 from sqlalchemy import select, cast, String, update, desc
 from .schemas import FindCells, AddCont, Layer, Mooves, Recomend, UploadData
 from typing import List
-from datetime import datetime, timezone
-from .mig_to_excel import migration, calculation_score, check_stack_size, ask_ai, calculation_movement_price, upload_company_mov
+from datetime import datetime
+from .mig_to_excel import (migration, calculation_score, stack_is_valid, ask_ai, calculation_movement_price,
+                           upload_company_mov, to_utc_naive, hours_until)
 from .settings import get_current_user
 
 router = APIRouter(prefix="/container", tags=['container'])
@@ -55,7 +56,7 @@ def add_cont(
 
         num = select(Coordinates).where(Coordinates.cell_id == a_cell)
         num = db.execute(num).scalar_one_or_none()
-        if num.value == "0":
+        if num is None or num.value == "0":
             raise HTTPException(403, "there is no support under the cell")
         # if num.cont_type != cell_.cont_type:
         #     raise HTTPException(403, "The container type does not match the one below it")
@@ -68,7 +69,8 @@ def add_cont(
 
         num = select(Coordinates).where(Coordinates.cell_id == b_cell)
         num = db.execute(num).scalar_one_or_none()
-        if float(num.value) == "0":
+        # было: float(num.value) == "0" — число сравнивалось со строкой, условие всегда ложно
+        if num is None or num.value == "0":
             raise HTTPException(403, "there is no support under the cell")
         # if num.cont_type != cell_.cont_type:
         #     raise HTTPException(403, "The container type does not match the one below it")
@@ -98,7 +100,7 @@ def add_cont(
                 size=data.size,
                 company=data.company,
                 cont_type=data.cont_type,
-                sent_date=data.sent_date,
+                sent_date=to_utc_naive(data.sent_date),
                 path_num_from=data.path_num_from,
                 path_num_to=data.path_num_to) 
     )
@@ -371,46 +373,29 @@ def recommend_cells(data: Recomend,
 
     EMPTY_CELL = "0"
     try:
-        time_diff_data = data.sent_date - datetime.now(timezone.utc)
-        delta_time = round(time_diff_data.total_seconds() / 3600, 2)
-        # print(delta_time)
-        free_cells = db.query(Coordinates).filter(
-            Coordinates.value == EMPTY_CELL
-        ).all()
+        delta_time = hours_until(data.sent_date)
+        # вся площадка одним запросом (раньше — 1-3 запроса на каждую свободную ячейку);
+        # ORDER BY делает результат детерминированным при равных оценках
+        all_cells = db.query(Coordinates).order_by(Coordinates.cell_id).all()
+        by_id = {c.cell_id: c for c in all_cells}
         recommendations = []
-        lower_delta_time = None
 
-        for cell in free_cells:
-            # print(cell.cell_id)
-            if not check_stack_size(
-                db,
-                cell.cell_id,
-                int(data.size)
-            ):
-                # print("not")
+        for cell in all_cells:
+            if cell.value != EMPTY_CELL:
+                continue
+            if not stack_is_valid(by_id, cell.cell_id, int(data.size)):
                 continue
 
-            list_cell = list(cell.cell_id)
-            
-            if list_cell[0] == 'B':
+            # сбрасываем для каждой ячейки: раньше значение «протекало» от предыдущей ячейки
+            # и ячейка яруса A могла получить чужой штраф
+            lower_delta_time = None
+            layer = cell.cell_id[0]
+            if layer in ("B", "C"):
+                lower_id = {"B": "A", "C": "B"}[layer] + cell.cell_id[1:]
+                lower_cell = by_id.get(lower_id)
+                if lower_cell is not None and lower_cell.sent_date is not None:
+                    lower_delta_time = hours_until(lower_cell.sent_date)
 
-                list_cell[0] = 'A'
-                lower_cell = ''.join(list_cell)
-                # print(lower_cell)
-                stmt = db.query(Coordinates).filter(Coordinates.cell_id == lower_cell)
-                lower_cell = stmt.first()
-                time_diff = lower_cell.sent_date.replace(tzinfo=None) - datetime.now().replace(tzinfo=None)
-                lower_delta_time = round(time_diff.total_seconds() / 3600, 2)
-            
-            elif list_cell[0] == 'C':
-                
-                list_cell[0] = 'B'
-                lower_cell = ''.join(list_cell)
-                stmt = db.query(Coordinates).filter(Coordinates.cell_id == lower_cell)
-                lower_cell = stmt.first()
-                time_diff = lower_cell.sent_date.replace(tzinfo=None) - datetime.now().replace(tzinfo=None)
-                lower_delta_time = round(time_diff.total_seconds() / 3600, 2)
-            # print(lower_delta_time)
             score = calculation_score(
                 delta_time,
                 cell.cell_id,
@@ -433,7 +418,7 @@ def recommend_cells(data: Recomend,
         best = top_5[0]
         best_cell = best['cell']
         best_score = best['score']
-        explanation = ask_ai(f"""
+        prompt = f"""
             Ты объясняешь решение системы контейнерного терминала.
             информация о терминале:
                              3 слоя(A, B, C, где нижний слой A, а C верхний),
@@ -442,7 +427,8 @@ def recommend_cells(data: Recomend,
                              
             Контейнер:
             Размер: {data.size}
-            Дней до отправки: {delta_time}, если значение больше 7, контейнер будут стараться поставить в пределах 5 рядов от пути отправления
+            Часов до отправки: {delta_time}. Классы срочности: до 96 ч — срочный (ближе к пути, верхний ярус, крайние колонны X/Z),
+            96–240 ч — средний (ярус B, колонна Y), больше 240 ч — долгий (нижний ярус A, около 5 рядов от пути)
             Путь отправления: {data.path_to}
             Выбранный слой: {list(best_cell)[0]}
 
@@ -459,7 +445,12 @@ def recommend_cells(data: Recomend,
             4. Как это уменьшает перестановки.
 
             Ответ не длиннее 3 предложений.
-            """)
+            """
+        try:
+            explanation = ask_ai(prompt)
+        except Exception as e:  # сервис пояснений недоступен — рекомендация всё равно выдаётся
+            print(f"ask_ai error: {e}")
+            explanation = 'Пояснение временно недоступно.'
         return {"top 5": top_5, "объяснение": explanation}
     finally:
         db.close()
