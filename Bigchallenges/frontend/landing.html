@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ЭДКТ — экосистема для контейнерного терминала</title>
+    <meta name="description" content="ЭДКТ подбирает ячейку для контейнера с учётом даты отправки, передаёт наряды крановщикам и ведёт учёт операций." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@600;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --harbor: #0e2a47;
+        --signal: #1f5fa8;
+        --safety: #f06a1d;
+        --concrete: #e9edf1;
+        --steel: #5c6b7a;
+        --ink: #0f1f2e;
+        --oxide: #9a3b2b;
+        --display: "Unbounded", "Onest", system-ui, sans-serif;
+        --ui: "Onest", "Segoe UI", system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: var(--ui);
+        color: var(--ink);
+        background: var(--concrete);
+        line-height: 1.55;
+      }
+      a { color: inherit; }
+      :focus-visible { outline: 3px solid var(--safety); outline-offset: 3px; border-radius: 4px; }
+
+      .wrap { width: min(1160px, 100% - 40px); margin-inline: auto; }
+
+      /* ---------- шапка ---------- */
+      .top {
+        position: absolute; inset: 0 0 auto 0; z-index: 3;
+        padding: 22px 0;
+      }
+      .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .mark { font-family: var(--display); font-weight: 800; font-size: 1.05rem; text-decoration: none; letter-spacing: 0.02em; }
+      .top nav { display: flex; gap: 22px; font-weight: 500; }
+      .top nav a { text-decoration: none; color: var(--steel); }
+      .top nav a:hover { color: var(--harbor); }
+
+      /* ---------- герой: площадка ---------- */
+      .hero {
+        position: relative;
+        display: flex; flex-direction: column; justify-content: flex-start; padding-bottom: 0;
+        background: linear-gradient(180deg, #f6f8fa 0%, var(--concrete) 70%);
+        overflow: hidden;
+      }
+      .hero-copy { position: relative; z-index: 2; padding-top: clamp(84px, 11vh, 120px); }
+      .word {
+        font-family: var(--display); font-weight: 800;
+        font-size: clamp(3.6rem, 9vw, 7.4rem); line-height: 0.92;
+        margin: 0; color: var(--harbor); display: flex; gap: 0.02em;
+      }
+      .word span { display: inline-block; }
+      .lede { font-size: clamp(1.05rem, 1.5vw, 1.25rem); max-width: 46ch; margin: 16px 0 22px; color: #2b3d4f; }
+      .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 13px 20px; border-radius: 10px; font-weight: 600; text-decoration: none;
+        border: 2px solid var(--harbor);
+      }
+      .btn-main { background: var(--harbor); color: #fff; }
+      .btn-main:hover { background: var(--signal); border-color: var(--signal); }
+      .btn-line { color: var(--harbor); background: transparent; }
+      .btn-line:hover { background: #fff; }
+
+      .scene { display: block; width: 100%; height: auto; margin-top: 14px; }
+
+      /* одна согласованная сцена: поезд въезжает, кран переносит контейнер в штабель,
+         затем опускаются буквы ЭДКТ */
+      .train { animation: train 5.2s cubic-bezier(.22,.8,.3,1) both; }
+      .lift { animation: lift 5.2s ease-in-out both; }
+      .trolley { animation: trolley 5.2s ease-in-out both; }
+      .spreader { animation: spreader 5.2s ease-in-out both; }
+      .cable { transform-box: fill-box; transform-origin: top; animation: cable 5.2s ease-in-out both; }
+      .stack-rise { animation: rise 0.6s ease-out both; }
+      .word span { animation: drop 0.55s cubic-bezier(.3,1.4,.5,1) both; }
+      .word span:nth-child(1) { animation-delay: 4.1s; }
+      .word span:nth-child(2) { animation-delay: 4.25s; }
+      .word span:nth-child(3) { animation-delay: 4.4s; }
+      .word span:nth-child(4) { animation-delay: 4.55s; }
+      .lede, .actions { animation: fade 0.6s ease-out both; }
+      .lede { animation-delay: 4.9s; }
+      .actions { animation-delay: 5.1s; }
+      .beacon { animation: beacon 1.2s ease-in-out 5.4s infinite; }
+
+      @keyframes train { 0% { transform: translateX(-760px); } 30%, 100% { transform: translateX(0); } }
+      @keyframes lift {
+        0% { transform: translate(-760px, 0); }
+        30%, 40% { transform: translate(0, 0); }
+        52% { transform: translate(0, -176px); }
+        70% { transform: translate(500px, -176px); }
+        82%, 100% { transform: translate(500px, -60px); }
+      }
+      @keyframes trolley { 0%, 30% { transform: translateX(260px); } 38%, 52% { transform: translateX(0); } 70%, 100% { transform: translateX(500px); } }
+      @keyframes spreader { 0%, 33% { transform: translateY(-170px); } 40% { transform: translateY(0); } 52%, 70% { transform: translateY(-176px); } 82%, 88% { transform: translateY(-60px); } 100% { transform: translateY(-170px); } }
+      @keyframes cable { 0%, 33% { transform: scaleY(0.17); } 40% { transform: scaleY(1); } 52%, 70% { transform: scaleY(0.14); } 82%, 88% { transform: scaleY(0.71); } 100% { transform: scaleY(0.17); } }
+      @keyframes rise { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+      @keyframes drop { 0% { transform: translateY(-120px); opacity: 0; } 70% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+      @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+      @keyframes beacon { 50% { opacity: 0.25; } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .train, .lift, .trolley, .spreader, .cable, .stack-rise, .word span, .lede, .actions, .beacon { animation: none; }
+        .lift { transform: translate(500px, -60px); }
+        .trolley { transform: translateX(500px); }
+        .spreader { transform: translateY(-170px); }
+        .cable { transform: scaleY(0.17); }
+      }
+
+      /* ---------- разделы ---------- */
+      section { padding: 84px 0; }
+      h2 { font-family: var(--display); font-weight: 600; font-size: clamp(1.5rem, 2.6vw, 2.1rem); margin: 0 0 28px; color: var(--harbor); line-height: 1.2; max-width: 22ch; }
+      .abilities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 56px; }
+      .ability { padding: 22px 0; border-top: 2px solid rgba(14, 42, 71, 0.12); }
+      .ability h3 { margin: 0 0 6px; font-size: 1.12rem; color: var(--harbor); }
+      .ability p { margin: 0; color: #3a4b5c; max-width: 52ch; }
+
+      .proof { background: var(--harbor); color: #e8eef5; }
+      .proof h2 { color: #fff; }
+      .proof-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: center; }
+      .proof p { margin: 0 0 14px; max-width: 58ch; color: #c8d5e3; }
+      .bars { display: grid; gap: 14px; }
+      .bar-row { display: grid; grid-template-columns: 190px 1fr 64px; gap: 14px; align-items: center; font-size: 0.95rem; }
+      .bar { height: 26px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
+      .bar i { display: block; height: 100%; background: #8aa4bf; transform-origin: left; }
+      .bar-row.us .bar i { background: var(--safety); }
+      .bar-row b { font-weight: 600; text-align: right; color: #fff; }
+      .note { font-size: 0.85rem; color: #93a6ba; margin-top: 10px; }
+
+      .contact .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: start; }
+      .contact p { margin: 0 0 10px; color: #3a4b5c; max-width: 50ch; }
+      .links { display: grid; gap: 10px; }
+      .links a { display: flex; justify-content: space-between; padding: 16px 18px; background: #fff; border-radius: 10px; text-decoration: none; font-weight: 600; color: var(--harbor); border: 1px solid rgba(14,42,71,0.1); }
+      .links a span { color: var(--steel); font-weight: 500; }
+      .links a:hover { border-color: var(--signal); }
+      footer { padding: 26px 0 40px; color: var(--steel); font-size: 0.9rem; }
+
+      @media (max-width: 820px) {
+        .top nav { display: none; }
+        .abilities, .proof-grid, .contact .wrap { grid-template-columns: 1fr; }
+        .bar-row { grid-template-columns: 120px 1fr 52px; }
+        .scene { margin-top: 10px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <a class="mark" href="#">ЭДКТ</a>
+        <nav aria-label="Разделы">
+          <a href="#abilities">Возможности</a>
+          <a href="#proof">Испытания</a>
+          <a href="#contact">Контакты</a>
+          <a href="login.html">Войти</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-label="ЭДКТ">
+        <div class="wrap hero-copy">
+          <h1 class="word" aria-label="ЭДКТ"><span>Э</span><span>Д</span><span>К</span><span>Т</span></h1>
+          <p class="lede">Экосистема для контейнерного терминала: ставит каждый контейнер туда, откуда его не придётся выкапывать в день отправки.</p>
+          <div class="actions">
+            <a class="btn btn-main" href="login.html">Открыть платформу</a>
+            <a class="btn btn-line" href="https://github.com/BessolitsinGleb/EFCT" target="_blank" rel="noopener">Исходный код на GitHub</a>
+            <a class="btn btn-line" href="mailto:bessolitsingleb@yandex.ru">Написать разработчику</a>
+          </div>
+        </div>
+
+        <svg class="scene" viewBox="-190 34 1390 386" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+          <defs>
+            <pattern id="ribs" width="8" height="44" patternUnits="userSpaceOnUse">
+              <rect width="8" height="44" fill="none" />
+              <rect x="6" width="2" height="44" fill="rgba(0,0,0,0.14)" />
+            </pattern>
+            <g id="box">
+              <rect width="120" height="44" rx="2" />
+              <rect width="120" height="44" rx="2" fill="url(#ribs)" />
+              <rect x="0" y="0" width="120" height="4" fill="rgba(255,255,255,0.18)" />
+            </g>
+          </defs>
+
+          <!-- земля и рельсы -->
+          <rect x="-190" y="372" width="1390" height="48" fill="#cfd7df" />
+          <rect x="-190" y="370" width="1390" height="3" fill="#8a97a4" />
+          <rect x="-190" y="384" width="1390" height="2" fill="#aeb9c4" />
+
+          <!-- штабели -->
+          <g>
+            <use href="#box" x="640" y="328" fill="#1f5fa8" class="stack-rise" style="animation-delay:.15s" />
+            <use href="#box" x="640" y="284" fill="#9a3b2b" class="stack-rise" style="animation-delay:.3s" />
+            <use href="#box" x="760" y="328" fill="#0e2a47" class="stack-rise" style="animation-delay:.2s" />
+            <use href="#box" x="760" y="284" fill="#5c6b7a" class="stack-rise" style="animation-delay:.35s" />
+            <use href="#box" x="760" y="240" fill="#1f5fa8" class="stack-rise" style="animation-delay:.5s" />
+            <use href="#box" x="880" y="328" fill="#5c6b7a" class="stack-rise" style="animation-delay:.25s" />
+            <use href="#box" x="880" y="284" fill="#0e2a47" class="stack-rise" style="animation-delay:.4s" />
+            <use href="#box" x="1000" y="328" fill="#9a3b2b" class="stack-rise" style="animation-delay:.3s" />
+            <use href="#box" x="1000" y="284" fill="#1f5fa8" class="stack-rise" style="animation-delay:.45s" />
+            <use href="#box" x="1000" y="240" fill="#5c6b7a" class="stack-rise" style="animation-delay:.6s" />
+          </g>
+
+          <!-- козловой кран -->
+          <g fill="#f06a1d">
+            <rect x="330" y="58" width="12" height="314" />
+            <rect x="1130" y="58" width="12" height="314" />
+            <rect x="318" y="50" width="836" height="20" rx="2" />
+            <rect x="318" y="70" width="836" height="4" fill="#c9520f" />
+            <rect x="322" y="360" width="28" height="12" fill="#c9520f" />
+            <rect x="1122" y="360" width="28" height="12" fill="#c9520f" />
+            <circle class="beacon" cx="736" cy="44" r="5" fill="#ffd166" />
+          </g>
+
+          <!-- тележка с тросом и спредером -->
+          <g class="trolley">
+            <rect x="420" y="72" width="42" height="16" rx="2" fill="#0e2a47" />
+            <rect class="cable" x="439" y="88" width="3" height="204" fill="#2b3d4f" />
+            <g class="spreader">
+              <rect x="378" y="290" width="126" height="8" rx="1" fill="#2b3d4f" />
+            </g>
+          </g>
+
+          <!-- поезд -->
+          <g class="train">
+            <rect x="40" y="344" width="200" height="12" fill="#2b3d4f" />
+            <rect x="270" y="344" width="240" height="12" fill="#2b3d4f" />
+            <g fill="#3a4b5c">
+              <circle cx="70" cy="362" r="9" /><circle cx="210" cy="362" r="9" />
+              <circle cx="300" cy="362" r="9" /><circle cx="480" cy="362" r="9" />
+            </g>
+            <use href="#box" x="80" y="300" fill="#0e2a47" />
+            <!-- локомотив -->
+            <rect x="-150" y="306" width="170" height="50" rx="6" fill="#1f5fa8" />
+            <rect x="-140" y="290" width="70" height="24" rx="3" fill="#174a84" />
+            <rect x="-128" y="296" width="22" height="12" fill="#cfe0f2" />
+            <circle cx="-120" cy="362" r="9" fill="#3a4b5c" /><circle cx="-20" cy="362" r="9" fill="#3a4b5c" />
+          </g>
+
+          <!-- контейнер, который кран переносит в штабель (на 880 по третьему ярусу) -->
+          <g class="lift">
+            <use href="#box" x="380" y="300" fill="#f06a1d" />
+          </g>
+        </svg>
+      </section>
+
+      <section id="abilities">
+        <div class="wrap">
+          <h2>Что делает ЭДКТ на площадке</h2>
+          <div class="abilities">
+            <div class="ability">
+              <h3>Подбирает ячейку</h3>
+              <p>Учитывает дату и путь отправки: срочный контейнер встанет наверх у своего пути, долгий — вниз, туда, где не помешает остальным.</p>
+            </div>
+            <div class="ability">
+              <h3>Отправляет наряд на кран</h3>
+              <p>Приёмосдатчик видит, кто на каком кране и в сети ли он. Наряд приходит крановщику мгновенно — без звонков и поиска контейнера пешком.</p>
+            </div>
+            <div class="ability">
+              <h3>Работает по правилам терминала</h3>
+              <p>Зоны для рефрижераторов, места для постоянных клиентов, запреты на ярусы — правила задаются в интерфейсе и учитываются при каждом подборе.</p>
+            </div>
+            <div class="ability">
+              <h3>Считает и отчитывается</h3>
+              <p>Каждая операция попадает в журнал с ценой по тарифу, отчёт для компании-клиента за период выгружается одной кнопкой.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="proof" class="proof">
+        <div class="wrap proof-grid">
+          <div>
+            <h2>Меньше лишних перестановок</h2>
+            <p>Алгоритм проверен на имитационной модели площадки из 270 ячеек при загрузке около 60 %: поток контейнеров 20 и 40 футов, ошибка прогноза даты отправки ±12 часов, по 15 прогонов на каждую стратегию.</p>
+            <p>Чтобы выдать контейнер, ЭДКТ в среднем переставляет 0,13 контейнера. При размещении «куда есть место» — 0,78, «поближе к пути» — 0,83.</p>
+          </div>
+          <div>
+            <div class="bars" role="img" aria-label="Перестановок на одну выдачу: ЭДКТ 0,13; случайная ячейка 0,78; ближайшая к пути 0,83">
+              <div class="bar-row"><span>Ближайшая к пути</span><div class="bar"><i style="width:100%"></i></div><b>0,83</b></div>
+              <div class="bar-row"><span>Куда есть место</span><div class="bar"><i style="width:94%"></i></div><b>0,78</b></div>
+              <div class="bar-row us"><span>ЭДКТ</span><div class="bar"><i style="width:16%"></i></div><b>0,13</b></div>
+            </div>
+            <p class="note">Перестановок на одну выдачу контейнера, имитационное тестирование.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" class="contact">
+        <div class="wrap">
+          <div>
+            <h2>Связаться</h2>
+            <p>ЭДКТ разрабатывает Глеб Бессолицин. Если вы управляете контейнерной площадкой и хотите попробовать систему на своих данных — напишите.</p>
+          </div>
+          <div class="links">
+            <a href="login.html">Платформа <span>войти</span></a>
+            <a href="https://github.com/BessolitsinGleb/EFCT" target="_blank" rel="noopener">GitHub <span>BessolitsinGleb/EFCT</span></a>
+            <a href="mailto:bessolitsingleb@yandex.ru">Почта <span>bessolitsingleb@yandex.ru</span></a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">© 2026 ЭДКТ. Проект Глеба Бессолицина</div>
+    </footer>
+  </body>
+</html>

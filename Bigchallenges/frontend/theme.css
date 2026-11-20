@@ -1,0 +1,74 @@
+/* ЭДКТ — общая тема интерфейса.
+   Цвета порта: морской синий (надёжность), сигнальный синий (действия),
+   оранжевый как у кранов и сигнальных жилетов (внимание), бетон площадки (фон). */
+@import url("https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap");
+
+:root {
+  --harbor: #0e2a47;
+  --signal: #1f5fa8;
+  --signal-dark: #174a84;
+  --safety: #f06a1d;
+  --safety-dark: #c9520f;
+  --concrete: #e9edf1;
+  --steel: #5c6b7a;
+  --ink: #0f1f2e;
+  --ok: #1e8a5a;
+
+  --bg: linear-gradient(180deg, #eef2f6 0%, #e3e9ef 100%);
+  --panel: #ffffff;
+  --panel-dark: var(--harbor);
+  --line: rgba(14, 42, 71, 0.14);
+  --text: var(--ink);
+  --muted: var(--steel);
+  --accent: var(--safety);
+  --accent-dark: var(--safety-dark);
+  --empty: #f3f6f9;
+  --busy: #d9e6f5;
+  --shadow: 0 14px 34px rgba(14, 42, 71, 0.1);
+  --font-ui: "Onest", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Unbounded", "Onest", system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-feature-settings: "tnum" 1;
+}
+
+h1, h2, .brand, .logo, .user-bar-logo {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* коды ячеек и номера контейнеров — табличные цифры вместо Consolas */
+[style*="Consolas"], .endpoint-tag, .rec-cell-name, td strong {
+  font-family: var(--font-ui) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+button.btn-primary, .btn-primary {
+  background: var(--signal);
+}
+button.btn-primary:hover, .btn-primary:hover {
+  background: var(--signal-dark);
+}
+
+:focus-visible {
+  outline: 3px solid var(--safety);
+  outline-offset: 2px;
+}
+
+td.busy {
+  background: var(--busy);
+}
+td.empty {
+  background: var(--empty);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
