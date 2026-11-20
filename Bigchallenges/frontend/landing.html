@@ -43,7 +43,42 @@
       .top nav a:hover { color: var(--harbor); }
 
       /* ---------- герой ---------- */
-      .hero { position: relative; background: linear-gradient(180deg, #f6f8fa 0%, var(--concrete) 70%); overflow: hidden; }
+      .hero { position: relative; background: linear-gradient(180deg, #e6f0f8 0%, #f3f1ee 58%, #f6e3d2 66%, var(--concrete) 100%); overflow: hidden; --mx: 0; --my: 0; }
+      /* порт на заднем плане: небо, море, судно, причальные краны; слои смещаются за мышью */
+      .backdrop { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+      .scene { position: relative; z-index: 1; }
+      .px1 { transform: translate(calc(var(--mx) * 26px), calc(var(--my) * 8px)); transition: transform .6s ease-out; }
+      .px2 { transform: translate(calc(var(--mx) * 12px), calc(var(--my) * 4px)); transition: transform .6s ease-out; }
+      .px3 { transform: translate(calc(var(--mx) * 5px), 0); transition: transform .6s ease-out; }
+      .cloud { animation: drift linear infinite; }
+      .cloud.c1 { animation-duration: 90s; } .cloud.c2 { animation-duration: 130s; animation-delay: -60s; } .cloud.c3 { animation-duration: 110s; animation-delay: -30s; }
+      @keyframes drift { from { transform: translateX(-300px); } to { transform: translateX(1900px); } }
+      .gull { animation: fly 26s linear infinite; }
+      .gull.g2 { animation-duration: 34s; animation-delay: -12s; }
+      .gull path { animation: flap .5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+      @keyframes fly { from { transform: translate(-80px, 0); } 50% { transform: translate(800px, -26px); } to { transform: translate(1700px, 6px); } }
+      @keyframes flap { to { transform: scaleY(-0.6); } }
+      .waves { animation: waves 6s linear infinite; }
+      .waves.w2 { animation-duration: 9s; animation-direction: reverse; }
+      @keyframes waves { to { transform: translateX(-80px); } }
+      .ship { animation: sail 80s linear -41s infinite; cursor: pointer; }
+      @keyframes sail { from { transform: translateX(1750px); } to { transform: translateX(-700px); } }
+      .ship .bob { animation: bob 3.2s ease-in-out infinite; }
+      @keyframes bob { 50% { transform: translateY(2px) rotate(0.4deg); } }
+      .boom { transform-box: fill-box; transform-origin: 0% 50%; animation: boom 7s ease-in-out infinite; }
+      .boom.b2 { animation-delay: -2.5s; } .boom.b3 { animation-delay: -5s; }
+      @keyframes boom { 0%, 35% { transform: rotate(0deg); } 50%, 85% { transform: rotate(-24deg); } }
+      .honk-text, .puff { opacity: 0; }
+      .ship.honk .honk-text { animation: honk 1.6s ease-out; }
+      .ship.honk .puff { animation: puff 1.6s ease-out; }
+      .ship.honk .puff:nth-of-type(2) { animation-delay: .15s; } .ship.honk .puff:nth-of-type(3) { animation-delay: .3s; }
+      @keyframes honk { 10%, 70% { opacity: 1; transform: translateY(-6px); } 100% { opacity: 0; transform: translateY(-16px); } }
+      @keyframes puff { 0% { opacity: .8; transform: translate(0, 0) scale(.6); } 100% { opacity: 0; transform: translate(-14px, -34px) scale(1.8); } }
+      .puff { transform-box: fill-box; transform-origin: center; }
+
+      /* живой план площадки за разделами */
+      .yardbg { position: relative; isolation: isolate; }
+      .yardbg > canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
       .hero-copy { position: relative; z-index: 2; padding-top: clamp(84px, 11vh, 120px); }
       .word { font-family: var(--display); font-weight: 800; font-size: clamp(3.6rem, 9vw, 7.4rem); line-height: 0.92; margin: 0; color: var(--harbor); display: flex; gap: 0.02em; }
       .word span { display: inline-block; }
@@ -52,9 +87,10 @@
       .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; border: 2px solid var(--harbor); min-height: 44px; }
       .btn-main { background: var(--harbor); color: #fff; }
       .btn-main:hover { background: var(--signal); border-color: var(--signal); }
-      .btn-line { color: var(--harbor); background: transparent; }
+      .btn-line { color: var(--harbor); background: rgba(255, 255, 255, 0.82); }
       .btn-line:hover { background: #fff; }
-      .scene { display: block; width: 100%; height: auto; margin-top: 14px; cursor: pointer; }
+      .scene { display: block; width: 100%; height: auto; margin-top: 14px; pointer-events: none; }
+      .scene .train, .scene .lift, .scene .crane, .scene .trolley { pointer-events: auto; cursor: pointer; }
       .replay { position: absolute; right: max(20px, calc((100% - 1160px) / 2)); bottom: 8px; z-index: 2; font: inherit; font-size: 0.9rem; color: var(--steel); background: rgba(255,255,255,0.75); border: 1px solid rgba(14,42,71,0.15); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
       .replay:hover { color: var(--harbor); }
 
@@ -179,6 +215,9 @@
         .bar i { transform: none; }
         .truck { transform: none; }
         .consist { display: none; }
+        .cloud, .gull, .gull path, .waves, .ship, .ship .bob, .boom { animation: none !important; }
+        .ship { transform: translateX(980px); }
+        .px1, .px2, .px3 { transform: none; }
       }
     </style>
   </head>
@@ -214,7 +253,62 @@
     </header>
 
     <main>
-      <section class="hero" aria-label="ЭДКТ" style="padding:0">
+      <section class="hero" id="hero" aria-label="ЭДКТ" style="padding:0">
+        <svg class="backdrop" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b8db8" /><stop offset="1" stop-color="#2f6390" /></linearGradient>
+            <radialGradient id="sun"><stop offset="0" stop-color="#ffd8a8" /><stop offset=".55" stop-color="#ffd8a8" stop-opacity=".55" /><stop offset="1" stop-color="#ffd8a8" stop-opacity="0" /></radialGradient>
+            <g id="cl"><ellipse cx="0" cy="0" rx="70" ry="18" /><ellipse cx="-38" cy="-10" rx="34" ry="20" /><ellipse cx="22" cy="-16" rx="40" ry="24" /></g>
+            <g id="sts">
+              <rect x="0" y="0" width="7" height="150" /><rect x="58" y="0" width="7" height="150" />
+              <rect x="-6" y="-8" width="80" height="10" /><path d="M7 40 L58 0 M58 40 L7 0" stroke-width="3" stroke="currentColor" />
+            </g>
+          </defs>
+          <circle cx="1240" cy="560" r="150" fill="url(#sun)" />
+          <g class="px1" fill="#ffffff" opacity=".85">
+            <use href="#cl" class="cloud c1" x="100" y="150" />
+            <use href="#cl" class="cloud c2" x="300" y="270" transform="scale(.8)" />
+            <use href="#cl" class="cloud c3" x="0" y="90" opacity=".7" />
+          </g>
+          <g class="px1" stroke="#3a4b5c" stroke-width="2.5" fill="none" stroke-linecap="round">
+            <g class="gull"><path d="M0 300 q8 -8 16 0 q8 -8 16 0" /></g>
+            <g class="gull g2"><path d="M0 230 q6 -6 12 0 q6 -6 12 0" /></g>
+          </g>
+          <!-- море -->
+          <rect class="px3" x="-60" y="600" width="1720" height="300" fill="url(#sea)" />
+          <g class="px3" stroke="#a9c8e2" stroke-width="2" opacity=".55">
+            <g class="waves"><path d="M-80 640 h40 M0 640 h40 M80 640 h40 M160 640 h40 M240 640 h40 M320 640 h40 M400 640 h40 M480 640 h40 M560 640 h40 M640 640 h40 M720 640 h40 M800 640 h40 M880 640 h40 M960 640 h40 M1040 640 h40 M1120 640 h40 M1200 640 h40 M1280 640 h40 M1360 640 h40 M1440 640 h40 M1520 640 h40 M1600 640 h40 M1680 640 h40" /></g>
+            <g class="waves w2"><path d="M-40 672 h60 M80 672 h60 M200 672 h60 M320 672 h60 M440 672 h60 M560 672 h60 M680 672 h60 M800 672 h60 M920 672 h60 M1040 672 h60 M1160 672 h60 M1280 672 h60 M1400 672 h60 M1520 672 h60 M1640 672 h60" /></g>
+          </g>
+          <!-- причал и краны STS вдали -->
+          <g class="px2" color="#7f98b0" fill="#7f98b0">
+            <rect x="1060" y="592" width="560" height="14" />
+            <use href="#sts" x="1120" y="442" /><rect class="boom" x="1182" y="434" width="110" height="7" />
+            <use href="#sts" x="1300" y="442" /><rect class="boom b2" x="1362" y="434" width="110" height="7" />
+            <use href="#sts" x="1480" y="442" /><rect class="boom b3" x="1542" y="434" width="110" height="7" />
+          </g>
+          <!-- контейнеровоз: проходит за штабелями, по клику гудит -->
+          <g class="px2">
+            <g class="ship" id="ship">
+              <g class="bob">
+                <path d="M0 600 h330 l-22 34 h-290 z" fill="#0e2a47" />
+                <rect x="0" y="596" width="330" height="6" fill="#9a3b2b" />
+                <g>
+                  <rect x="30" y="568" width="34" height="28" fill="#f06a1d" /><rect x="66" y="568" width="34" height="28" fill="#1f5fa8" />
+                  <rect x="102" y="568" width="34" height="28" fill="#5c6b7a" /><rect x="138" y="568" width="34" height="28" fill="#f06a1d" />
+                  <rect x="174" y="568" width="34" height="28" fill="#e9edf1" /><rect x="210" y="568" width="34" height="28" fill="#9a3b2b" />
+                  <rect x="48" y="540" width="34" height="28" fill="#1f5fa8" /><rect x="84" y="540" width="34" height="28" fill="#9a3b2b" />
+                  <rect x="120" y="540" width="34" height="28" fill="#1f5fa8" /><rect x="156" y="540" width="34" height="28" fill="#5c6b7a" />
+                  <rect x="192" y="540" width="34" height="28" fill="#f06a1d" />
+                </g>
+                <rect x="262" y="536" width="44" height="60" fill="#f4f6f8" /><rect x="268" y="544" width="32" height="7" fill="#2b3d4f" />
+                <rect x="280" y="516" width="12" height="20" fill="#9a3b2b" />
+                <circle class="puff" cx="286" cy="508" r="7" fill="#c9d3dc" /><circle class="puff" cx="290" cy="500" r="9" fill="#c9d3dc" /><circle class="puff" cx="282" cy="492" r="11" fill="#c9d3dc" />
+                <text class="honk-text" x="300" y="486" font-family="Unbounded, sans-serif" font-size="22" font-weight="800" fill="#0e2a47">Ту-ту!</text>
+              </g>
+            </g>
+          </g>
+        </svg>
         <div class="wrap hero-copy">
           <h1 class="word" aria-label="ЭДКТ"><span>Э</span><span>Д</span><span>К</span><span>Т</span></h1>
           <p class="lede">Экосистема для контейнерного терминала: ставит каждый контейнер туда, откуда его не придётся выкапывать в день отправки.</p>
@@ -252,7 +346,7 @@
           </g>
 
           <!-- козловой кран -->
-          <g fill="#f06a1d">
+          <g class="crane" fill="#f06a1d">
             <rect x="330" y="58" width="12" height="314" />
             <rect x="1130" y="58" width="12" height="314" />
             <rect x="318" y="50" width="836" height="20" rx="2" />
@@ -312,7 +406,7 @@
         </svg>
       </div>
 
-      <section id="abilities" class="reveal">
+      <section id="abilities" class="reveal yardbg"><canvas aria-hidden="true"></canvas>
         <div class="wrap">
           <h2>Что делает ЭДКТ на площадке</h2>
           <div class="abilities">
@@ -411,7 +505,7 @@
         </svg>
       </div>
 
-      <section id="contact" class="contact reveal">
+      <section id="contact" class="contact reveal yardbg"><canvas aria-hidden="true"></canvas>
         <div class="wrap">
           <div>
             <h2>Связаться</h2>
@@ -450,6 +544,58 @@
         document.getElementById("replay").addEventListener("click", replay);
 
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        // параллакс порта за мышью
+        const hero = document.getElementById("hero");
+        if (!reduce) hero.addEventListener("pointermove", (e) => {
+          const r = hero.getBoundingClientRect();
+          hero.style.setProperty("--mx", ((e.clientX - r.left) / r.width - 0.5) * 2);
+          hero.style.setProperty("--my", ((e.clientY - r.top) / r.height - 0.5) * 2);
+        });
+        // судно гудит по клику
+        const ship = document.getElementById("ship");
+        ship.addEventListener("click", (e) => {
+          e.stopPropagation();
+          ship.classList.remove("honk"); void ship.getBoundingClientRect(); ship.classList.add("honk");
+        });
+
+        // живой план площадки: контейнеры встают и уезжают, под курсором ячейки подсвечиваются
+        const COLORS = ["#1f5fa8", "#f06a1d", "#0e2a47", "#9a3b2b", "#5c6b7a"];
+        document.querySelectorAll(".yardbg").forEach((sec) => {
+          const cv = sec.querySelector("canvas"), ctx = cv.getContext("2d");
+          const CW = 46, CH = 20, GAP = 6;
+          let cols = 0, rows = 0, cells = [], mouse = null, dpr = 1;
+          const size = () => {
+            dpr = window.devicePixelRatio || 1;
+            cv.width = sec.clientWidth * dpr; cv.height = sec.clientHeight * dpr;
+            cols = Math.ceil(sec.clientWidth / (CW + GAP)); rows = Math.ceil(sec.clientHeight / (CH + GAP));
+            cells = Array.from({ length: cols * rows }, () => (Math.random() < 0.28 ? { c: COLORS[(Math.random() * 5) | 0], a: 1 } : null));
+          };
+          const draw = () => {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, cv.width, cv.height);
+            for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+              const px = x * (CW + GAP) + 3, py = y * (CH + GAP) + 3, k = cells[y * cols + x];
+              let hot = 0;
+              if (mouse) { const d = Math.hypot(px + CW / 2 - mouse.x, py + CH / 2 - mouse.y); hot = Math.max(0, 1 - d / 140); }
+              ctx.strokeStyle = `rgba(31,95,168,${0.1 + hot * 0.35})`;
+              ctx.lineWidth = 1;
+              ctx.strokeRect(px + 0.5, py + 0.5, CW - 1, CH - 1);
+              if (k) { ctx.globalAlpha = (0.09 + hot * 0.25) * k.a; ctx.fillStyle = k.c; ctx.fillRect(px, py, CW, CH); ctx.globalAlpha = 1; }
+            }
+          };
+          size(); draw();
+          new ResizeObserver(() => { size(); draw(); }).observe(sec);
+          sec.addEventListener("pointermove", (e) => { const r = sec.getBoundingClientRect(); mouse = { x: e.clientX - r.left, y: e.clientY - r.top }; draw(); });
+          sec.addEventListener("pointerleave", () => { mouse = null; draw(); });
+          if (!reduce) setInterval(() => {
+            for (let n = 0; n < 3; n++) {
+              const i = (Math.random() * cells.length) | 0;
+              cells[i] = cells[i] ? null : { c: COLORS[(Math.random() * 5) | 0], a: 1 };
+            }
+            draw();
+          }, 450);
+        });
         const count = (el) => {
           const to = parseFloat(el.dataset.to);
           const t0 = performance.now();
