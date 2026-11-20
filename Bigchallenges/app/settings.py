@@ -194,6 +194,7 @@ async def notify_task_assigned(task: Task):
         {
             "type": "new_task",
             "task_id": task.id,
+            "crane_id": task.crane_id,
             "actions_count": len(task.actions),
         },
     )

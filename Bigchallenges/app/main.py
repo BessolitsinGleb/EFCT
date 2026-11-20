@@ -1,6 +1,9 @@
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
-from .database import engine, Base
+from .database import engine, Base, sync_session
+from sqlalchemy import inspect, text
+from .yard import ensure_yard_cells, ensure_cranes
+from . import models  # noqa: F401  (регистрирует таблицы, в т.ч. cranes и placement_rules)
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import router
 from .routers_2 import router as router_2
@@ -23,8 +26,16 @@ app.include_router(router_2)
 
 @app.on_event("startup")
 def on_startup():
+    Base.metadata.create_all(bind=engine)
+    # таблица tasks могла быть создана до появления кранов: добавляем колонку, если её нет
     with engine.begin() as conn:
-        Base.metadata.create_all(bind=engine)
+        if "crane_id" not in [c["name"] for c in inspect(conn).get_columns("tasks")]:
+            conn.execute(text("ALTER TABLE tasks ADD COLUMN crane_id INTEGER REFERENCES cranes(crane_id)"))
+    with sync_session() as db:
+        created = ensure_yard_cells(db)
+        if created:
+            print(f"Создано ячеек площадки: {created}")
+        ensure_cranes(db)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str):

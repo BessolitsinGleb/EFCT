@@ -912,10 +912,45 @@
               <input id="rec_path_to" type="number" placeholder="1" min="1" />
               <label for="rec_sent_date">Дата отправки</label>
               <input id="rec_sent_date" type="datetime-local" />
+              <label for="rec_company">Компания (для правил размещения, необязательно)</label>
+              <input id="rec_company" placeholder="Например, fesco" />
+              <label for="rec_cont_type">Тип контейнера (необязательно)</label>
+              <input id="rec_cont_type" placeholder="Например, reefer" />
               <button class="btn-primary mt" onclick="recommend()">
                 Подобрать ячейки
               </button>
               <div id="rec_results"></div>
+            </div>
+          </div>
+
+          <!-- Правила размещения -->
+          <div class="card">
+            <div class="card-header" onclick="toggle(this)">
+              Правила размещения
+              <span class="endpoint-tag">/container/rules</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="card-content">
+              <div id="rules_list"><p class="subtle">Загрузка...</p></div>
+              <label for="rule_name" class="mt">Новое правило</label>
+              <input id="rule_name" placeholder="Название, например «Рефы у розеток»" />
+              <label for="rule_mode">Тип</label>
+              <select id="rule_mode">
+                <option value="require">Только в зоне (обязательно)</option>
+                <option value="prefer">Предпочтительно в зоне (бонус к оценке)</option>
+                <option value="forbid">Запрещено в зоне</option>
+              </select>
+              <label>Для каких контейнеров (пусто — для всех)</label>
+              <input id="rule_company" placeholder="Компания" />
+              <input id="rule_cont_type" placeholder="Тип контейнера, например reefer" />
+              <input id="rule_size" type="number" placeholder="Размер: 20 или 40" />
+              <label>Зона (пусто — без ограничения)</label>
+              <input id="rule_layers" placeholder="Ярусы, например AB" />
+              <input id="rule_columns" placeholder="Колонны, например XZ" />
+              <input id="rule_row_from" type="number" placeholder="Ряд от" />
+              <input id="rule_row_to" type="number" placeholder="Ряд до" />
+              <input id="rule_bonus" type="number" step="0.05" placeholder="Бонус для «предпочтительно», по умолчанию 0.2" />
+              <button class="btn-primary mt" onclick="createRule()">Добавить правило</button>
             </div>
           </div>
 
@@ -943,17 +978,21 @@
           <!-- 9. Онлайн-крановщики -->
           <div class="card">
             <div class="card-header" onclick="toggle(this)">
-              Онлайн-крановщики
-              <span class="endpoint-tag">GET /crane-operators/online</span>
+              Краны и крановщики
+              <span class="endpoint-tag">GET /cran/cranes</span>
               <span class="arrow">▼</span>
             </div>
             <div class="card-content">
               <button class="btn-secondary mt" onclick="loadOnlineOperators()">
                 Обновить список
               </button>
-              <div id="operators_list" class="mt">
+              <div id="cranes_list" class="mt">
                 <p class="subtle">Нажмите «Обновить список».</p>
               </div>
+              <div id="operators_list" class="mt"></div>
+              <label for="new_crane_name" class="mt">Добавить кран</label>
+              <input id="new_crane_name" placeholder="Название, например «Кран 3»" />
+              <button class="btn-secondary mt" onclick="createCrane()">Добавить кран</button>
             </div>
           </div>
 
@@ -991,7 +1030,11 @@
               <span class="arrow">▼</span>
             </div>
             <div class="card-content" id="task_card_content">
-              <label for="task_assigned_to">Назначить крановщику (ID)</label>
+              <label for="task_crane_id">Кран (наряд получит крановщик, который на нём работает)</label>
+              <select id="task_crane_id">
+                <option value="">— выбрать кран —</option>
+              </select>
+              <label for="task_assigned_to">или крановщик напрямую (ID)</label>
               <input
                 id="task_assigned_to"
                 type="number"
@@ -1043,9 +1086,7 @@
               </div>
               <div class="layer-actions">
                 <select id="layer_input">
-                  <option value="A">Слой A</option>
-                  <option value="B">Слой B</option>
-                  <option value="C">Слой C</option>
+                  <option value="A">Ярус A</option>
                 </select>
                 <button class="btn-secondary" onclick="loadLayer()">
                   Обновить
@@ -1283,7 +1324,20 @@
         return { coord, rowNum };
       }
 
-      const COORD_ORDER = { X: 0, Y: 1, Z: 2 };
+      let YARD = { layers: ["A", "B", "C"], columns: ["X", "Y", "Z"], rows: 30, path_rows: [5, 15, 25] };
+      let COORD_ORDER = { X: 0, Y: 1, Z: 2 };
+
+      async function loadYard() {
+        try {
+          const res = await fetch(API + "/container/yard", { headers: authHeaders() });
+          if (!res.ok) return;
+          YARD = await res.json();
+          COORD_ORDER = Object.fromEntries(YARD.columns.map((c, i) => [c, i]));
+          document.getElementById("layer_input").innerHTML = YARD.layers
+            .map((l, i) => `<option value="${l}">Ярус ${l}${i === 0 ? " (нижний)" : i === YARD.layers.length - 1 ? " (верхний)" : ""}</option>`)
+            .join("");
+        } catch {}
+      }
 
       function buildLayerTable(data) {
         // Sort: by row number, then by coord X < Y < Z
@@ -1324,11 +1378,7 @@
         return `
           <table>
             <thead>
-              <tr>
-                <th>X</th>
-                <th>Y</th>
-                <th>Z</th>
-              </tr>
+              <tr>${YARD.columns.map((c) => `<th>${c}</th>`).join("")}</tr>
             </thead>
             <tbody>${bodyRows}</tbody>
           </table>`;
@@ -1456,7 +1506,13 @@
               "Content-Type": "application/json",
               Authorization: "Bearer " + getToken(),
             },
-            body: JSON.stringify({ size, path_to, sent_date }),
+            body: JSON.stringify({
+              size,
+              path_to,
+              sent_date,
+              company: document.getElementById("rec_company").value.trim() || null,
+              cont_type: document.getElementById("rec_cont_type").value.trim() || null,
+            }),
           });
           const data = await res.json();
           if (!res.ok) {
@@ -1488,7 +1544,7 @@
             return `
               <div class="rec-cell-card${i === 0 ? " top-1" : ""}">
                 <div class="rec-cell-info">
-                  <span class="rec-cell-name">${item.cell ?? "—"}</span>
+                  <span class="rec-cell-name">${(item.cells || [item.cell]).join(" + ")}</span>
                   <span class="rec-cell-score">Рейтинг: ${scoreStr}</span>
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -1616,7 +1672,9 @@
           const name =
             user.user_name || user.username || user.name || "ID " + user.id;
           document.getElementById("ub_name").textContent = name;
+          await loadYard();
           loadOnlineOperators();
+          loadRules();
           loadMyTasks();
         } catch {
           logout();
@@ -1629,41 +1687,67 @@
          ONLINE OPERATORS
       ══════════════════════════════════════════ */
 
+      let CRANE_NAMES = {};
+
       async function loadOnlineOperators() {
-        const list = document.getElementById("operators_list");
+        const list = document.getElementById("cranes_list");
         list.innerHTML =
           '<p class="subtle"><span class="loader"></span>Загрузка...</p>';
         try {
-          const res = await fetch(API + "/cran/crane-operators/online", {
-            headers: authHeaders(),
-          });
-          const data = await res.json();
+          const res = await fetch(API + "/cran/cranes", { headers: authHeaders() });
+          const cranes = await res.json();
           if (!res.ok) {
-            list.innerHTML =
-              '<p class="subtle" style="color:var(--accent)">' +
-              JSON.stringify(data) +
-              "</p>";
+            list.innerHTML = '<p class="subtle" style="color:var(--accent)">' + JSON.stringify(cranes) + "</p>";
             return;
           }
-          const ids = Array.isArray(data) ? data : (data.id ?? []);
-          if (ids.length === 0) {
-            list.innerHTML = '<p class="subtle">Нет крановщиков онлайн.</p>';
-            return;
-          }
-          list.innerHTML = ids
-            .map(
-              (id) => `
+          CRANE_NAMES = Object.fromEntries(cranes.map((c) => [c.crane_id, c.name]));
+          document.getElementById("task_crane_id").innerHTML =
+            '<option value="">— выбрать кран —</option>' +
+            cranes
+              .map((c) => `<option value="${c.crane_id}">${c.name}${c.operator_name ? " — " + c.operator_name + (c.online ? " (онлайн)" : " (не в сети)") : " — свободен"}</option>`)
+              .join("");
+          list.innerHTML = cranes.length
+            ? cranes
+                .map(
+                  (c) => `
             <div class="operator-item">
-              <span>Крановщик #${id}</span>
-              <button class="btn-select" onclick="selectOperator(${id})">Выбрать</button>
+              <span><strong>${c.name}</strong> — ${c.operator_name ? c.operator_name + (c.online ? " · 🟢 онлайн" : " · не в сети") : "крановщика нет"}</span>
+              <button class="btn-select" onclick="selectCrane(${c.crane_id})" ${c.operator_id ? "" : "disabled"}>Выбрать</button>
             </div>`,
-            )
-            .join("");
+                )
+                .join("")
+            : '<p class="subtle">Кранов нет — добавьте кран ниже.</p>';
         } catch (e) {
-          list.innerHTML =
-            '<p class="subtle" style="color:var(--accent)">Ошибка: ' +
-            e.message +
-            "</p>";
+          list.innerHTML = '<p class="subtle" style="color:var(--accent)">Ошибка: ' + e.message + "</p>";
+        }
+      }
+
+      function selectCrane(id) {
+        document.getElementById("task_crane_id").value = id;
+        document.getElementById("task_assigned_to").value = "";
+        const taskContent = document.getElementById("task_card_content");
+        const taskArrow = taskContent.previousElementSibling.querySelector(".arrow");
+        if (!taskContent.classList.contains("open")) {
+          taskContent.classList.add("open");
+          taskArrow.style.transform = "rotate(180deg)";
+        }
+        taskContent.scrollIntoView({ behavior: "smooth", block: "start" });
+        setStatus("Выбран кран «" + (CRANE_NAMES[id] || id) + "» для нового задания.");
+      }
+
+      async function createCrane() {
+        const name = document.getElementById("new_crane_name").value.trim();
+        if (!name) return setStatus("Укажите название крана.");
+        const res = await fetch(API + "/cran/cranes", {
+          method: "POST",
+          headers: { ...authHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        });
+        const data = await res.json();
+        setStatus(res.ok ? "Кран «" + data.name + "» добавлен." : data.detail || JSON.stringify(data));
+        if (res.ok) {
+          document.getElementById("new_crane_name").value = "";
+          loadOnlineOperators();
         }
       }
 
@@ -1727,11 +1811,12 @@
         const assignedTo = parseInt(
           document.getElementById("task_assigned_to").value,
         );
+        const craneId = parseInt(document.getElementById("task_crane_id").value);
         const resEl = document.getElementById("res_create_task");
 
-        if (!assignedTo) {
+        if (!assignedTo && !craneId) {
           resEl.style.display = "block";
-          resEl.textContent = "Укажите ID крановщика.";
+          resEl.textContent = "Выберите кран или укажите ID крановщика.";
           resEl.className = "result error";
           return;
         }
@@ -1765,7 +1850,11 @@
               ...authHeaders(),
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ assigned_to: assignedTo, actions }),
+            body: JSON.stringify(
+              craneId
+                ? { crane_id: craneId, actions }
+                : { assigned_to: assignedTo, actions },
+            ),
           });
           const data = await res.json();
           if (!res.ok) {
@@ -1897,6 +1986,76 @@
         }
       }
 
+      const RULE_MODE = { require: "только в зоне", prefer: "предпочтительно", forbid: "запрещено" };
+
+      async function loadRules() {
+        const box = document.getElementById("rules_list");
+        try {
+          const res = await fetch(API + "/container/rules", { headers: authHeaders() });
+          const rules = await res.json();
+          if (!res.ok) {
+            box.innerHTML = '<p class="subtle">' + (rules.detail || JSON.stringify(rules)) + "</p>";
+            return;
+          }
+          if (!rules.length) {
+            box.innerHTML = '<p class="subtle">Правил пока нет — размещение только по алгоритму.</p>';
+            return;
+          }
+          box.innerHTML = rules
+            .map((r) => {
+              const who = [r.company, r.cont_type, r.size ? r.size + " фут." : null].filter(Boolean).join(", ") || "все контейнеры";
+              const zone = [
+                r.layers ? "ярусы " + r.layers : null,
+                r.columns ? "колонны " + r.columns : null,
+                r.row_from || r.row_to ? "ряды " + (r.row_from || 1) + "–" + (r.row_to || YARD.rows) : null,
+              ].filter(Boolean).join(", ") || "вся площадка";
+              return `
+            <div class="operator-item">
+              <span${r.is_active ? "" : ' style="opacity:.5"'}><strong>${r.name}</strong> — ${who}: ${RULE_MODE[r.mode] || r.mode} (${zone})${r.mode === "prefer" ? ", +" + Math.round(r.bonus * 100) + "%" : ""}</span>
+              <button class="btn-select" onclick="toggleRule(${r.id}, ${!r.is_active})">${r.is_active ? "Выключить" : "Включить"}</button>
+            </div>`;
+            })
+            .join("");
+        } catch (e) {
+          box.innerHTML = '<p class="subtle">Ошибка: ' + e.message + "</p>";
+        }
+      }
+
+      async function createRule() {
+        const v = (id) => document.getElementById(id).value.trim();
+        const num = (id) => (v(id) ? Number(v(id)) : null);
+        const body = {
+          name: v("rule_name"),
+          mode: v("rule_mode"),
+          company: v("rule_company") || null,
+          cont_type: v("rule_cont_type") || null,
+          size: num("rule_size"),
+          layers: v("rule_layers").toUpperCase() || null,
+          columns: v("rule_columns").toUpperCase() || null,
+          row_from: num("rule_row_from"),
+          row_to: num("rule_row_to"),
+          bonus: num("rule_bonus") ?? 0.2,
+        };
+        if (!body.name) return setStatus("Укажите название правила.");
+        const res = await fetch(API + "/container/rules", {
+          method: "POST",
+          headers: { ...authHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        setStatus(res.ok ? "Правило «" + data.name + "» добавлено." : data.detail || JSON.stringify(data));
+        if (res.ok) loadRules();
+      }
+
+      async function toggleRule(id, active) {
+        await fetch(API + "/container/rules/" + id, {
+          method: "PATCH",
+          headers: { ...authHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify({ is_active: active }),
+        });
+        loadRules();
+      }
+
       function renderMyTaskCard(task) {
         const statusLabel = TASK_STATUS_LABEL[task.status] || task.status;
         const actionsHtml = (task.actions || [])
@@ -1917,7 +2076,7 @@
         <div class="task-card">
           <div class="task-card-header">
             <span class="task-id">Задание #${task.id}</span>
-            <span class="task-meta">Крановщик: #${task.assigned_to} · ${(task.actions || []).length} действий</span>
+            <span class="task-meta">${task.crane_id ? (CRANE_NAMES[task.crane_id] || "Кран #" + task.crane_id) + " · " : ""}Крановщик: #${task.assigned_to} · ${(task.actions || []).length} действий</span>
             <span class="status-badge status-${task.status}">${statusLabel}</span>
           </div>
           ${actionsHtml}

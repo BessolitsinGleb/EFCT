@@ -248,6 +248,19 @@
         background: #10293d;
       }
 
+      .crane-pick {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .crane-pick select {
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        font: inherit;
+        background: #fff;
+      }
       .btn-sm {
         padding: 6px 12px;
         font-size: 0.82rem;
@@ -520,6 +533,12 @@
         <aside class="summary">
           <div class="summary-title">Статус</div>
           <div class="info-box" id="status_box">Инициализация...</div>
+          <div class="summary-title" style="margin-top: 18px">Мой кран</div>
+          <div class="crane-pick">
+            <select id="crane_select"></select>
+            <button class="btn-secondary" onclick="takeCrane()">Занять</button>
+          </div>
+          <div class="info-box" id="crane_box">Кран не выбран</div>
         </aside>
       </section>
 
@@ -590,11 +609,42 @@
             user.user_name || user.username || user.name || "ID " + user.id;
           document.getElementById("ub_name").textContent = name;
           setStatus("Добро пожаловать, " + name + "!");
+          window.ME = user;
           connectWebSocket();
+          loadCranes();
           loadTasks();
         } catch (e) {
           logout();
         }
+      }
+
+      // ── Краны: крановщик выбирает кран в начале смены ──
+      async function loadCranes() {
+        try {
+          const res = await fetch(API + "/cran/cranes", { headers: authHeaders() });
+          const cranes = await res.json();
+          if (!res.ok) return;
+          const mine = cranes.find((c) => window.ME && c.operator_name === window.ME.user_name);
+          document.getElementById("crane_select").innerHTML = cranes
+            .map((c) => `<option value="${c.crane_id}" ${mine && mine.crane_id === c.crane_id ? "selected" : ""}>${c.name}${c.operator_name && (!mine || mine.crane_id !== c.crane_id) ? " (занят: " + c.operator_name + ")" : ""}</option>`)
+            .join("");
+          document.getElementById("crane_box").textContent = mine
+            ? "Вы работаете на кране «" + mine.name + "»."
+            : "Кран не выбран — выберите кран, чтобы получать наряды на него.";
+        } catch {}
+      }
+
+      async function takeCrane() {
+        const id = document.getElementById("crane_select").value;
+        if (!id) return;
+        const res = await fetch(API + "/cran/cranes/" + id + "/take", {
+          method: "POST",
+          headers: authHeaders(),
+        });
+        const data = await res.json();
+        setStatus(res.ok ? "Вы заняли кран «" + data.name + "»." : data.detail || JSON.stringify(data));
+        loadCranes();
+        loadTasks();
       }
 
       // ── WebSocket ──

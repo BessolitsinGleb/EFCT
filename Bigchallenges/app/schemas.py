@@ -36,6 +36,8 @@ class Recomend(BaseModel):
     size: int
     path_to: int
     sent_date: datetime
+    company: str | None = None      # для правил размещения
+    cont_type: str | None = None
 
 class UploadData(BaseModel):
     company: str
@@ -66,7 +68,8 @@ class TaskActionCreate(BaseModel):
     to_loc: str | None = None
 
 class TaskCreate(BaseModel):
-    assigned_to: int
+    assigned_to: int | None = None   # крановщик напрямую
+    crane_id: int | None = None      # или кран: наряд получит тот, кто сейчас на нём работает
     actions: list[TaskActionCreate]
 
 class TaskActionOut(BaseModel):
@@ -88,6 +91,7 @@ class TaskOut(BaseModel):
     status: TaskStatus
     created_by: int
     assigned_to: int | None
+    crane_id: int | None = None
     actions: list[TaskActionOut]
 
     class Config:
@@ -95,3 +99,31 @@ class TaskOut(BaseModel):
 
 class ActionStatusUpdate(BaseModel):
     status: ActionStatus
+
+class CraneCreate(BaseModel):
+    name: str
+
+
+class RuleIn(BaseModel):
+    name: str
+    mode: str = "require"            # require | prefer | forbid
+    company: str | None = None
+    cont_type: str | None = None
+    size: int | None = None
+    layers: str | None = None
+    columns: str | None = None
+    row_from: int | None = None
+    row_to: int | None = None
+    bonus: float = 0.2
+    is_active: bool = True
+
+
+class RuleOut(RuleIn):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class RuleToggle(BaseModel):
+    is_active: bool

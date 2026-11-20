@@ -72,6 +72,34 @@ class ActionStatus(str, Enum):
     done = "done"
     failed = "failed"
 
+class Crane(Base):
+    """Кран (машина). operator_id — крановщик, который сейчас работает на этом кране."""
+    __tablename__ = "cranes"
+
+    crane_id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), unique=True)
+    operator_id: Mapped[int | None] = mapped_column(ForeignKey("users.user_id"), nullable=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+
+
+class PlacementRule(Base):
+    """Настраиваемое правило размещения (см. placement.Rule)."""
+    __tablename__ = "placement_rules"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    mode: Mapped[str] = mapped_column(String(10), default="require")   # require | prefer | forbid
+    company: Mapped[str | None] = mapped_column(nullable=True)
+    cont_type: Mapped[str | None] = mapped_column(nullable=True)
+    size: Mapped[int | None] = mapped_column(nullable=True)
+    layers: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    columns: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    row_from: Mapped[int | None] = mapped_column(nullable=True)
+    row_to: Mapped[int | None] = mapped_column(nullable=True)
+    bonus: Mapped[float] = mapped_column(default=0.2)
+    is_active: Mapped[bool] = mapped_column(default=True)
+
+
 class TaskStatus(str, Enum):
     draft = "draft"
     sent = "sent"
@@ -85,6 +113,7 @@ class Task(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     created_by: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
     assigned_to: Mapped[int | None] = mapped_column(ForeignKey("users.user_id"))
+    crane_id: Mapped[int | None] = mapped_column(ForeignKey("cranes.crane_id"), nullable=True)
     status: Mapped[TaskStatus] = mapped_column(SAEnum(TaskStatus), default=TaskStatus.draft)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)  # без скобок: время создания, а не запуска сервера
 
