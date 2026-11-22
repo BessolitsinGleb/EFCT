@@ -31,6 +31,8 @@ def on_startup():
     with engine.begin() as conn:
         if "crane_id" not in [c["name"] for c in inspect(conn).get_columns("tasks")]:
             conn.execute(text("ALTER TABLE tasks ADD COLUMN crane_id INTEGER REFERENCES cranes(crane_id)"))
+        if "size" not in [c["name"] for c in inspect(conn).get_columns("movement_information")]:
+            conn.execute(text("ALTER TABLE movement_information ADD COLUMN size INTEGER"))
     with sync_session() as db:
         created = ensure_yard_cells(db)
         if created:

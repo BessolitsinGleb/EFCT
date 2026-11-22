@@ -955,22 +955,30 @@
             </div>
           </div>
 
-          <!-- 8. Загрузка данных -->
+          <!-- 8. Отчёты -->
           <div class="card">
             <div class="card-header" onclick="toggle(this)">
-              Загрузка данных
-              <span class="endpoint-tag">POST /container/data_upload</span>
+              Отчёты
+              <span class="endpoint-tag">POST /container/report</span>
               <span class="arrow">▼</span>
             </div>
             <div class="card-content">
-              <label for="upload_company">Компания</label>
-              <input id="upload_company" placeholder="Название компании" />
-              <label for="upload_start_data">Дата начала</label>
-              <input id="upload_start_data" type="datetime-local" />
-              <label for="upload_end_data">Дата окончания</label>
-              <input id="upload_end_data" type="datetime-local" />
+              <label for="report_kind">Вид отчёта</label>
+              <select id="report_kind" onchange="reportKindChanged()">
+                <option value="summary">Реестр услуг к оплате (операции + хранение)</option>
+                <option value="operations">Журнал операций за период</option>
+                <option value="inventory">Остатки на площадке (сейчас)</option>
+              </select>
+              <label for="upload_company">Компания (пусто — все компании)</label>
+              <input id="upload_company" placeholder="Например, fesco" />
+              <div id="report_period">
+                <label for="upload_start_data">Дата начала</label>
+                <input id="upload_start_data" type="datetime-local" />
+                <label for="upload_end_data">Дата окончания</label>
+                <input id="upload_end_data" type="datetime-local" />
+              </div>
               <button class="btn-primary mt" onclick="uploadData()">
-                Загрузить
+                Скачать отчёт
               </button>
               <div class="result" id="res_upload_data"></div>
             </div>
@@ -1296,43 +1304,51 @@
         );
       }
 
+      function reportKindChanged() {
+        const inv = document.getElementById("report_kind").value === "inventory";
+        document.getElementById("report_period").style.display = inv ? "none" : "block";
+      }
+
       function uploadData() {
+        const kind = document.getElementById("report_kind").value;
         const company = document.getElementById("upload_company").value.trim();
         const startRaw = document.getElementById("upload_start_data").value;
         const endRaw = document.getElementById("upload_end_data").value;
+        const el = document.getElementById("res_upload_data");
+        el.style.display = "block";
 
-        if (!company || !startRaw || !endRaw) {
-          const el = document.getElementById("res_upload_data");
-          el.textContent = "Заполните все поля.";
+        if (kind !== "inventory" && (!startRaw || !endRaw)) {
+          el.textContent = "Укажите период.";
           el.className = "result error";
           return;
         }
 
-        const body = {
-          company,
-          start_data: new Date(startRaw).toISOString(),
-          end_data: new Date(endRaw).toISOString(),
-        };
+        const body = { kind, company: company || null };
+        if (kind !== "inventory") {
+          body.start_data = new Date(startRaw).toISOString();
+          body.end_data = new Date(endRaw).toISOString();
+        }
+        const titles = { summary: "reestr_uslug", operations: "operacii", inventory: "ostatki" };
+        const who = (company || "vse").replace(/[^\wа-яё-]/gi, "_");
+        const when = kind === "inventory" ? new Date().toISOString().slice(0, 10) : `${startRaw.slice(0, 10)}_${endRaw.slice(0, 10)}`;
+        const name = `${titles[kind]}_${who}_${when}.csv`;
 
-        const el = document.getElementById("res_upload_data");
-        el.style.display = "block";
         el.className = "result";
         el.textContent = "Формирую отчёт...";
-        fetch(API + "/container/data_upload", {
+        fetch(API + "/container/report", {
           method: "POST",
           headers: { ...authHeaders(), "Content-Type": "application/json" },
           body: JSON.stringify(body),
         })
           .then(async (res) => {
             if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.status);
-            const name = `${company.replace(/[^\wа-яё-]/gi, "_")}_report_${startRaw.slice(0, 10)}_${endRaw.slice(0, 10)}.csv`;
             const rows = res.headers.get("X-Rows");
             const url = URL.createObjectURL(await res.blob());
             const a = document.createElement("a");
             a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
             URL.revokeObjectURL(url);
             el.className = "result success";
-            el.textContent = `Отчёт скачан: ${name} (операций: ${rows ?? "—"}).`;
+            el.textContent = `Отчёт скачан: ${name} (строк: ${rows ?? "—"}). Откройте в Excel.`;
           })
           .catch((e) => {
             el.className = "result error";

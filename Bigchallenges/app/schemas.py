@@ -44,6 +44,12 @@ class UploadData(BaseModel):
     start_data: datetime
     end_data: datetime
 
+class ReportIn(BaseModel):
+    kind: str                      # operations | summary | inventory
+    company: str | None = None     # пусто — все компании
+    start_data: datetime | None = None
+    end_data: datetime | None = None
+
 class UserReg(BaseModel):
     user_name: str
     role: str

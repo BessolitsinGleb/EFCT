@@ -3,7 +3,7 @@ from .database import get_db
 from sqlalchemy.orm import Session
 from .models import Coordinates, Mooving, Movement_info, User, Role, PlacementRule
 from sqlalchemy import select, cast, String, update, desc
-from .schemas import FindCells, AddCont, Layer, Mooves, Recomend, UploadData, RuleIn, RuleOut, RuleToggle
+from .schemas import FindCells, AddCont, Layer, Mooves, Recomend, UploadData, RuleIn, RuleOut, RuleToggle, ReportIn
 from typing import List
 from datetime import datetime
 from .mig_to_excel import (migration, calculation_score, ask_ai, calculation_movement_price,
@@ -11,6 +11,8 @@ from .mig_to_excel import (migration, calculation_score, ask_ai, calculation_mov
 from .placement import EMPTY, placement_problem, blocked_by, rules_check
 from .yard import YARD, load_rules, yard_info
 from .settings import get_current_user
+from .core import settings
+from . import reports
 
 router = APIRouter(prefix="/container", tags=['container'])
 
@@ -71,7 +73,7 @@ def add_cont(data: AddCont, user: User = Depends(get_current_user), db: Session 
     except ValueError as e:
         raise HTTPException(400, str(e))
     db.add(Movement_info(moove_type="adding", value=data.value, path_num_from=data.path_num_from,
-                         cell_to=fp[0], movement_time=datetime.utcnow(), company=data.company, price=price))
+                         cell_to=fp[0], movement_time=datetime.utcnow(), company=data.company, price=price, size=data.size))
     db.execute(update(Coordinates).where(Coordinates.cell_id.in_(fp)).values(
         value=data.value, size=data.size, company=data.company, cont_type=data.cont_type,
         sent_date=to_utc_naive(data.sent_date), path_num_from=data.path_num_from, path_num_to=data.path_num_to))
@@ -124,7 +126,7 @@ def load_cont(value: str, path_num: int, user: User = Depends(get_current_user),
     except ValueError as e:
         raise HTTPException(400, str(e))
     db.add(Movement_info(moove_type="loading", value=value, path_num_to=path_num, cell_from=first.cell_id,
-                         movement_time=datetime.utcnow(), company=first.company, price=price))
+                         movement_time=datetime.utcnow(), company=first.company, price=price, size=first.size))
     db.execute(update(Mooving).where(cast(Mooving.value, String) == value).values(deleted_at=datetime.utcnow()))
     db.execute(update(Coordinates).where(Coordinates.cell_id.in_([c.cell_id for c in own])).values(**clear_values()))
     db.commit()
@@ -154,7 +156,7 @@ def rearrange_cont(value: str, cell: str, user: User = Depends(get_current_user)
     keep = dict(value=value, size=src.size, company=src.company, cont_type=src.cont_type,
                 path_num_to=src.path_num_to, path_num_from=src.path_num_from, sent_date=src.sent_date)
     db.add(Movement_info(moove_type="rearrangement", value=value, cell_from=src.cell_id, cell_to=fp[0],
-                         movement_time=datetime.utcnow(), company=src.company, price=price))
+                         movement_time=datetime.utcnow(), company=src.company, price=price, size=src.size))
     db.execute(update(Coordinates).where(Coordinates.cell_id.in_([c.cell_id for c in own])).values(**clear_values()))
     db.execute(update(Coordinates).where(Coordinates.cell_id.in_(fp)).values(**keep))
     db.commit()
@@ -251,6 +253,40 @@ def uploading_to_company(data: UploadData, user: User = Depends(get_current_user
     return Response(content, media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{filename}"',
                              "X-Rows": str(rows), "Access-Control-Expose-Headers": "Content-Disposition, X-Rows"})
+
+
+@router.post("/report")
+def terminal_report(data: ReportIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Отчётность терминала (CSV для Excel): журнал операций, реестр услуг к оплате, остатки на площадке."""
+    require_transceiver(user)
+    if data.kind not in ("operations", "summary", "inventory"):
+        raise HTTPException(422, "kind: operations | summary | inventory")
+    now = datetime.utcnow()
+    company = (data.company or "").strip() or None
+    moves = [{c: getattr(m, c) for c in ("moove_type", "value", "company", "size", "price", "movement_time",
+                                         "cell_from", "cell_to", "path_num_from", "path_num_to")}
+             for m in db.execute(select(Movement_info)).scalars()]
+    for m in moves:
+        m["moove_type"] = getattr(m["moove_type"], "value", m["moove_type"])
+    if data.kind == "inventory":
+        cells = [{"cell_id": c.cell_id, "value": c.value, "company": c.company, "size": c.size,
+                  "cont_type": c.cont_type, "sent_date": c.sent_date} for c in all_cells(db).values()]
+        df = reports.inventory_report(cells, moves, company, settings.STORAGE_FREE_DAYS, now)
+        name = f"ostatki_{reports.safe_name(company)}_{now:%Y-%m-%d}.csv"
+    else:
+        if not data.start_data or not data.end_data:
+            raise HTTPException(422, "Укажите период")
+        start, end = to_utc_naive(data.start_data), to_utc_naive(data.end_data)
+        if data.kind == "operations":
+            df = reports.operations_report(moves, company, start, end)
+            name = f"operacii_{reports.safe_name(company)}_{start:%Y-%m-%d}_{end:%Y-%m-%d}.csv"
+        else:
+            df = reports.summary_report(moves, company, start, end, settings.STORAGE_FREE_DAYS,
+                                        settings.STORAGE_RATE_TEU_DAY, now)
+            name = f"reestr_uslug_{reports.safe_name(company)}_{start:%Y-%m-%d}_{end:%Y-%m-%d}.csv"
+    return Response(reports.to_csv_bytes(df), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"', "X-Rows": str(len(df)),
+                             "Access-Control-Expose-Headers": "Content-Disposition, X-Rows"})
 
 
 # ---------- настраиваемые правила размещения ----------

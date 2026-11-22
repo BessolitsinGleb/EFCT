@@ -19,6 +19,11 @@ class Settings_(BaseSettings):
     SCORE_MEDIUM_HOURS: float = 240
     SCORE_LOWER_PENALTY: float = 0.5
 
+    # Хранение (условный тариф, заменяется прайсом терминала):
+    # первые STORAGE_FREE_DAYS суток бесплатно, далее ставка за TEU в сутки (40 фут. = 2 TEU)
+    STORAGE_FREE_DAYS: int = 2
+    STORAGE_RATE_TEU_DAY: float = 100
+
     model_config = SettingsConfigDict(
         env_file=".env", 
         env_file_encoding="utf-8",

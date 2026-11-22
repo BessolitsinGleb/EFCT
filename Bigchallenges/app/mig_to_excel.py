@@ -65,7 +65,7 @@ def upload_company_mov(company: str,
             df = pd.read_sql_query(query, con=conn,
                                    params={"company": company, "start": start_data_req, "end": end_data_req})
 
-        safe_company = re.sub(r"[^\w\-]", "_", company)  # без «/», «..» и т. п. в имени файла
+        safe_company = re.sub(r"[^A-Za-z0-9_\-]", "_", company)  # без «/», «..» и т. п. в имени файла
         filename = f"{safe_company}_reporting_from_{start_data_name}_to_{end_data_name}.csv"
         # отчёт отдаётся пользователю файлом (раньше сохранялся только на сервере);
         # utf-8-sig — чтобы Excel правильно открыл кириллицу

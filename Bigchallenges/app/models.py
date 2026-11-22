@@ -47,6 +47,7 @@ class Movement_info(Base):
     movement_time: Mapped[datetime] = mapped_column(nullable=False)
     company: Mapped[str] = mapped_column(nullable=False)
     price: Mapped[int] = mapped_column(default=0)
+    size: Mapped[int | None] = mapped_column(nullable=True)  # 20 / 40 — нужен для расчёта хранения в TEU
 
 class Role(Enum):
     crane_operator = "crane_operator"
