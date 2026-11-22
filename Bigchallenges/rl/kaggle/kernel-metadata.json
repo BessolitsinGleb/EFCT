@@ -1,0 +1,15 @@
+{
+ "id": "glebik1/edkt-rl-train",
+ "title": "EDKT RL train",
+ "code_file": "edkt-rl-train.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": true,
+ "enable_gpu": false,
+ "enable_internet": true,
+ "dataset_sources": [
+  "glebik1/edkt-rl-code"
+ ],
+ "competition_sources": [],
+ "kernel_sources": []
+}

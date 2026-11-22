@@ -83,6 +83,11 @@ class ScoringConfig:
     medium_hours: float = 240      # 96–240 ч — средний, дальше — долгий
     lower_penalty: float = 0.5     # множитель, если нижний контейнер уедет раньше
     long_target_rows: int = 5      # долгие ставим примерно в 5 рядах от пути
+    # веса слагаемых (близость к пути, ярус, колонна) для трёх классов срочности;
+    # значения по умолчанию — исходная формула автора (v1), подобранные веса — формула v2
+    w_urgent: tuple = (100, 60, 20)
+    w_medium: tuple = (60, 40, 10)
+    w_long: tuple = (30, 70, 5)
 
 
 DEFAULT_SCORING = ScoringConfig()
@@ -135,17 +140,20 @@ def calculation_score(delta_time, cell, path_from, lower_delta_time,
     if delta_time <= sc.urgent_hours:              # срочный: ближе к пути, выше, крайние колонны
         lv = (idx + 1) / n
         cv = 1 if edge else 0.5
-        score = (100 * (1 - d) + 60 * lv + 20 * cv) / 180
+        a, b, c = sc.w_urgent
+        score = (a * (1 - d) + b * lv + c * cv) / (a + b + c)
     elif delta_time <= sc.medium_hours:            # средний: средний ярус, средние колонны
         mid = (n - 1) / 2
         lv = 1 - 0.5 * abs(idx - mid) / max(mid, 1) if n > 1 else 1
         cv = 0.5 if edge else 1
-        score = (60 * (1 - d) + 40 * lv + 10 * cv) / 110
+        a, b, c = sc.w_medium
+        score = (a * (1 - d) + b * lv + c * cv) / (a + b + c)
     else:                                          # долгий: нижний ярус, в стороне от пути
         lv = 1 - idx / (n - 1) if n > 1 else 1
         cv = 0.5 if edge else 1
         d_ideal = abs(d - sc.long_target_rows / cfg.d_norm)
-        score = (30 * (1 - d_ideal) + 70 * lv + 5 * cv) / 105
+        a, b, c = sc.w_long
+        score = (a * (1 - d_ideal) + b * lv + c * cv) / (a + b + c)
 
     if lower_delta_time is not None and lower_delta_time < delta_time:
         score *= sc.lower_penalty
