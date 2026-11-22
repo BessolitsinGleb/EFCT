@@ -10,8 +10,9 @@ router = APIRouter(prefix="/cran", tags=['cran'])
 
 
 def require_role(user: User, role: Role, msg: str):
-    if user.role != role:
-        raise HTTPException(403, detail=msg)
+    if user.role == role or (role == Role.transceiver and user.role == Role.manager):  # начальник может всё, что приёмосдатчик
+        return
+    raise HTTPException(403, detail=msg)
 
 
 def crane_out(db: Session, crane: Crane, online: set) -> dict:
@@ -139,6 +140,27 @@ def list_my_tasks(assigned_to_me: bool = False, db: Session = Depends(get_db),
     else:
         query = query.filter(Task.created_by == current_user.user_id)
     return query.order_by(Task.id).all()
+
+
+@router.get("/tasks/all")
+def list_all_tasks(include_completed: bool = True, limit: int = 100, db: Session = Depends(get_db),
+                   current_user=Depends(get_current_user)):
+    """Начальник площадки видит наряды всех приёмосдатчиков и крановщиков."""
+    require_role(current_user, Role.manager, "only the yard manager")
+    q = db.query(Task)
+    if not include_completed:
+        q = q.filter(Task.status != TaskStatus.completed)
+    names = {u.user_id: u.user_name for u in db.query(User).all()}
+    cranes = {c.crane_id: c.name for c in db.query(Crane).all()}
+    out = []
+    for t in q.order_by(Task.id.desc()).limit(limit).all():
+        acts = t.actions
+        out.append({"id": t.id, "status": t.status.value, "created_at": t.created_at,
+                    "created_by": names.get(t.created_by), "assigned_to": names.get(t.assigned_to),
+                    "crane": cranes.get(t.crane_id), "actions": len(acts),
+                    "done": sum(a.status.value == "done" for a in acts),
+                    "summary": ", ".join(f"{a.action_type.value} {a.cont_num}" for a in acts[:3])})
+    return out
 
 
 @router.patch("/tasks/{task_id}/actions/{action_id}", response_model=TaskActionOut)

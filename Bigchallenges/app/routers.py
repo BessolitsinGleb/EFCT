@@ -18,7 +18,7 @@ router = APIRouter(prefix="/container", tags=['container'])
 
 
 def require_transceiver(user: User):
-    if user.role != Role.transceiver:
+    if user.role not in (Role.transceiver, Role.manager):  # начальник может всё, что приёмосдатчик
         raise HTTPException(403, detail="you are not the transceiver")
 
 

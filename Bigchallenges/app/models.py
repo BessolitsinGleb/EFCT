@@ -52,6 +52,7 @@ class Movement_info(Base):
 class Role(Enum):
     crane_operator = "crane_operator"
     transceiver = "transceiver"
+    manager = "manager"            # начальник площадки: регистрирует сотрудников, видит работу всех
 
 class User(Base):
 
@@ -59,8 +60,12 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(primary_key=True)
     user_name: Mapped[str] = mapped_column(unique=False)
+    first_name: Mapped[str | None] = mapped_column(nullable=True)
+    last_name: Mapped[str | None] = mapped_column(nullable=True)
     role: Mapped[Role] = mapped_column(nullable=False)
     password_hash: Mapped[str] = mapped_column()
+    is_active: Mapped[bool] = mapped_column(default=True, server_default="true")
+    badge_hash: Mapped[str | None] = mapped_column(nullable=True)   # «соль$SHA-256(соль+секрет)» пропуска (QR)
 
 class ActionType(str, Enum):
     ADD = "ADD"

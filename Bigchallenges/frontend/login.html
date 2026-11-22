@@ -164,6 +164,14 @@
         background: var(--accent-dark);
       }
 
+      .btn-secondary {
+        background: #183852;
+        color: white;
+      }
+      .btn-secondary:hover {
+        background: #10293d;
+      }
+
       .mt {
         margin-top: 16px;
       }
@@ -215,60 +223,62 @@
       <p class="subtitle" style="margin-top:-6px"><a href="landing.html" style="color:var(--signal)">О проекте</a></p>
 
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('login')">
-          Вход
-        </button>
-        <button class="tab-btn" onclick="switchTab('register')">
+        <button class="tab-btn active" data-tab="login" onclick="switchTab('login')">Пароль</button>
+        <button class="tab-btn" data-tab="badge" onclick="switchTab('badge')">Пропуск</button>
+        <button class="tab-btn" data-tab="register" id="tab-btn-register" onclick="switchTab('register')" style="display:none">
           Регистрация
         </button>
       </div>
 
-      <!-- Вход -->
+      <!-- Вход по паролю -->
       <div id="tab-login" class="tab-panel active">
-        <label for="login_username">Имя пользователя</label>
-        <input
-          id="login_username"
-          placeholder="user_name"
-          autocomplete="username"
-        />
+        <label for="login_username">Логин</label>
+        <input id="login_username" placeholder="например, ivanov.p" autocomplete="username" />
         <label for="login_password">Пароль</label>
-        <input
-          id="login_password"
-          type="password"
-          placeholder="••••••••"
-          autocomplete="current-password"
-        />
+        <input id="login_password" type="password" placeholder="••••••••" autocomplete="current-password" />
         <button class="btn-primary mt" onclick="doLogin()">Войти</button>
         <div class="result error" id="res_login" style="display: none"></div>
       </div>
 
-      <!-- Регистрация -->
+      <!-- Вход по пропуску (QR-код) -->
+      <div id="tab-badge" class="tab-panel">
+        <label for="badge_code">Код пропуска</label>
+        <input id="badge_code" placeholder="Поднесите пропуск к сканеру" autocomplete="off" />
+        <button class="btn-primary mt" onclick="doBadgeLogin()">Войти по пропуску</button>
+        <button class="btn-secondary mt" id="cam_btn" onclick="toggleCamera()">Сканировать камерой</button>
+        <video id="cam_video" playsinline muted style="display:none;width:100%;border-radius:12px;margin-top:10px"></video>
+        <canvas id="cam_canvas" style="display:none"></canvas>
+        <p class="subtitle" style="font-size:12px;margin-top:8px">
+          Ручной сканер штрих-кодов вводит код сам. Камера работает, если страница открыта
+          по адресу localhost или по https.
+        </p>
+        <div class="result error" id="res_badge" style="display: none"></div>
+      </div>
+
+      <!-- Регистрация: первый запуск (начальник) или демо-стенд -->
       <div id="tab-register" class="tab-panel">
-        <label for="reg_username">Имя пользователя</label>
-        <input
-          id="reg_username"
-          placeholder="user_name"
-          autocomplete="username"
-        />
+        <p class="subtitle" id="setup_hint" style="display:none">
+          Первый запуск: создайте учётную запись начальника площадки. Остальных сотрудников
+          начальник заведёт сам и выдаст им пароли и пропуска.
+        </p>
+        <label for="reg_username">Логин</label>
+        <input id="reg_username" placeholder="user_name" autocomplete="username" />
         <label for="reg_password">Пароль</label>
-        <input
-          id="reg_password"
-          type="password"
-          placeholder="••••••••"
-          autocomplete="new-password"
-        />
-        <label for="reg_role">Роль</label>
-        <select id="reg_role">
-          <option value="transceiver">Приёмосдатчик</option>
-          <option value="crane_operator">Крановщик</option>
-        </select>
-        <button class="btn-primary mt" onclick="doRegister()">
-          Зарегистрироваться
-        </button>
+        <input id="reg_password" type="password" placeholder="••••••••" autocomplete="new-password" />
+        <div id="reg_role_box">
+          <label for="reg_role">Роль</label>
+          <select id="reg_role">
+            <option value="transceiver">Приёмосдатчик</option>
+            <option value="crane_operator">Крановщик</option>
+            <option value="manager">Начальник площадки</option>
+          </select>
+        </div>
+        <button class="btn-primary mt" onclick="doRegister()">Зарегистрироваться</button>
         <div class="result error" id="res_register" style="display: none"></div>
       </div>
     </div>
 
+    <script src="vendor/jsQR.js"></script>
     <script>
       const API = "http://127.0.0.1:8000";
 
@@ -279,17 +289,28 @@
       })();
 
       function switchTab(name) {
-        const isLogin = name === "login";
-        document.querySelectorAll(".tab-btn").forEach((b, i) => {
-          b.classList.toggle("active", isLogin ? i === 0 : i === 1);
-        });
-        document
-          .getElementById("tab-login")
-          .classList.toggle("active", isLogin);
-        document
-          .getElementById("tab-register")
-          .classList.toggle("active", !isLogin);
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+        ["login", "badge", "register"].forEach((t) =>
+          document.getElementById("tab-" + t).classList.toggle("active", t === name));
+        if (name !== "badge") stopCamera();
+        if (name === "badge") document.getElementById("badge_code").focus();
       }
+
+      // Регистрация видна только при первом запуске (создаётся начальник) или на демо-стенде
+      (async () => {
+        try {
+          const st = await (await fetch(API + "/user/setup")).json();
+          if (st.needs_setup || st.open_registration) {
+            document.getElementById("tab-btn-register").style.display = "";
+          }
+          if (st.needs_setup && !st.open_registration) {
+            document.getElementById("setup_hint").style.display = "";
+            document.getElementById("reg_role_box").style.display = "none";
+            document.getElementById("tab-btn-register").textContent = "Первый запуск";
+            switchTab("register");
+          }
+        } catch {}
+      })();
 
       function showResult(id, msg, isError) {
         const el = document.getElementById(id);
@@ -310,7 +331,7 @@
           const user = await res.json();
           localStorage.setItem("user", JSON.stringify(user));
           location.href =
-            user.role === "crane_operator" ? "crane.html" : "index.html";
+            user.role === "crane_operator" ? "crane.html" : user.role === "manager" ? "manager.html" : "index.html";
         } catch {
           localStorage.removeItem("token");
         }
@@ -348,6 +369,82 @@
         } catch (e) {
           showResult("res_login", "Ошибка: " + e.message, true);
         }
+      }
+
+      async function loginWithBadge(code) {
+        showResult("res_badge", "Проверяю пропуск...", false);
+        try {
+          const res = await fetch(API + "/user/login_badge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showResult("res_badge", data.detail || "Пропуск не принят", true);
+            return false;
+          }
+          stopCamera();
+          localStorage.setItem("token", data.access_token);
+          showResult("res_badge", "Пропуск принят. Перенаправляем...", false);
+          await redirectByToken(data.access_token);
+          return true;
+        } catch (e) {
+          showResult("res_badge", "Ошибка: " + e.message, true);
+          return false;
+        }
+      }
+
+      function doBadgeLogin() {
+        const code = document.getElementById("badge_code").value.trim();
+        if (!code) return showResult("res_badge", "Отсканируйте пропуск или вставьте код.", true);
+        loginWithBadge(code);
+      }
+
+      let camStream = null, camBusy = false;
+      async function toggleCamera() {
+        if (camStream) return stopCamera();
+        const video = document.getElementById("cam_video");
+        try {
+          camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        } catch (e) {
+          showResult("res_badge", "Камера недоступна: разрешите доступ или используйте сканер. (" + e.name + ")", true);
+          return;
+        }
+        video.srcObject = camStream;
+        video.style.display = "block";
+        await video.play();
+        document.getElementById("cam_btn").textContent = "Выключить камеру";
+        requestAnimationFrame(scanFrame);
+      }
+
+      function stopCamera() {
+        if (!camStream) return;
+        camStream.getTracks().forEach((t) => t.stop());
+        camStream = null;
+        document.getElementById("cam_video").style.display = "none";
+        document.getElementById("cam_btn").textContent = "Сканировать камерой";
+      }
+
+      async function scanFrame() {
+        if (!camStream) return;
+        const video = document.getElementById("cam_video");
+        const canvas = document.getElementById("cam_canvas");
+        if (video.readyState === video.HAVE_ENOUGH_DATA && !camBusy) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          ctx.drawImage(video, 0, 0);
+          const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const qr = jsQR(img.data, img.width, img.height);
+          if (qr && qr.data.startsWith("EDKT:")) {
+            camBusy = true;
+            const okLogin = await loginWithBadge(qr.data);
+            camBusy = false;
+            if (okLogin) return;
+          }
+        }
+        requestAnimationFrame(scanFrame);
       }
 
       async function doRegister() {
@@ -411,8 +508,9 @@
 
       document.addEventListener("keydown", (e) => {
         if (e.key !== "Enter") return;
-        if (document.getElementById("tab-login").classList.contains("active"))
-          doLogin();
+        const active = document.querySelector(".tab-panel.active").id;
+        if (active === "tab-login") doLogin();
+        else if (active === "tab-badge") doBadgeLogin();
         else doRegister();
       });
     </script>

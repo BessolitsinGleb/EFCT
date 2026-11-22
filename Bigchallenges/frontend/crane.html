@@ -607,6 +607,7 @@
             return;
           }
           const name =
+            [user.first_name, user.last_name].filter(Boolean).join(" ") ||
             user.user_name || user.username || user.name || "ID " + user.id;
           document.getElementById("ub_name").textContent = name;
           setStatus("Добро пожаловать, " + name + "!");

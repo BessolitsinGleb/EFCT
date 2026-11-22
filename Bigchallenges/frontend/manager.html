@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ЭДКТ — Начальник площадки</title>
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #f4efe4 0%, #dfe8f3 100%);
+        --panel: rgba(255, 252, 247, 0.92);
+        --panel-dark: #17324a;
+        --line: rgba(23, 50, 74, 0.16);
+        --text: #102332;
+        --muted: #556b7c;
+        --accent: #d34d2d;
+        --accent-dark: #a9381d;
+        --empty: #f7f1e8;
+        --busy: #cfe3f6;
+        --shadow: 0 20px 45px rgba(19, 41, 60, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      /* ── User Bar ── */
+      .user-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(23, 50, 74, 0.97);
+        backdrop-filter: blur(10px);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        gap: 16px;
+      }
+
+      .user-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .user-bar-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        opacity: 0.9;
+      }
+
+      .user-bar-name {
+        font-size: 0.95rem;
+        opacity: 0.85;
+      }
+
+      .role-badge {
+        background: rgba(211, 77, 45, 0.85);
+        color: white;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 3px 9px;
+        border-radius: 8px;
+      }
+
+      .ws-badge {
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+        letter-spacing: 0.05em;
+      }
+
+      .ws-connected {
+        background: rgba(40, 167, 80, 0.25);
+        color: #6ee496;
+        border: 1px solid rgba(40, 167, 80, 0.4);
+      }
+
+      .ws-disconnected {
+        background: rgba(211, 77, 45, 0.25);
+        color: #f4a89a;
+        border: 1px solid rgba(211, 77, 45, 0.4);
+      }
+
+      .btn-logout {
+        background: rgba(255, 255, 255, 0.12);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 7px 14px;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        transition: background 0.18s;
+        width: auto;
+      }
+
+      .btn-logout:hover {
+        background: rgba(255, 255, 255, 0.22);
+        transform: none;
+      }
+
+      /* ── Page ── */
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      /* ── Hero ── */
+      .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+        margin-bottom: 28px;
+      }
+
+      .hero-card,
+      .summary,
+      .table-panel {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hero-card {
+        padding: 28px;
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.6rem, 3vw, 2.6rem);
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      .summary {
+        padding: 24px;
+        display: grid;
+        gap: 12px;
+        align-content: start;
+      }
+
+      .summary-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+      }
+
+      /* ── Table panel ── */
+      .table-panel {
+        padding: 24px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .panel-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      /* ── Buttons ── */
+      button {
+        border-radius: 14px;
+        font: inherit;
+        border: 0;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          transform 0.18s ease,
+          background 0.18s ease;
+        width: auto;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-dark);
+      }
+
+      .btn-secondary {
+        background: #183852;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #10293d;
+      }
+
+      .crane-pick {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .crane-pick select {
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        font: inherit;
+        background: #fff;
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.82rem;
+        border-radius: 10px;
+      }
+
+      .btn-start {
+        background: rgba(24, 56, 82, 0.12);
+        color: #183852;
+      }
+
+      .btn-start:hover {
+        background: #183852;
+        color: white;
+      }
+
+      .btn-done {
+        background: rgba(40, 167, 80, 0.12);
+        color: #1a7a3c;
+      }
+
+      .btn-done:hover {
+        background: rgba(40, 167, 80, 0.9);
+        color: white;
+      }
+
+      /* ── Task cards ── */
+      .task-card {
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(16, 35, 50, 0.1);
+        border-radius: 18px;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+
+      .task-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        background: rgba(23, 50, 74, 0.05);
+        border-bottom: 1px solid rgba(16, 35, 50, 0.07);
+        flex-wrap: wrap;
+      }
+
+      .task-id {
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .task-meta {
+        color: var(--muted);
+        font-size: 0.85rem;
+        flex: 1;
+      }
+
+      /* ── Action items ── */
+      .action-item {
+        display: grid;
+        grid-template-columns: auto 1fr 1fr auto auto;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 18px;
+        border-bottom: 1px solid rgba(16, 35, 50, 0.06);
+        font-size: 0.88rem;
+      }
+
+      .action-item:last-child {
+        border-bottom: 0;
+      }
+
+      .action-type-badge {
+        background: rgba(23, 50, 74, 0.1);
+        color: var(--text);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 3px 8px;
+        border-radius: 7px;
+        white-space: nowrap;
+      }
+
+      .action-cont {
+        font-family: "Consolas", monospace;
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+
+      .action-route {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      /* ── Status badges ── */
+      .status-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 3px 9px;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+
+      .status-pending {
+        background: rgba(23, 50, 74, 0.08);
+        color: var(--muted);
+      }
+
+      .status-sent {
+        background: rgba(207, 227, 246, 0.7);
+        color: #1a4a6e;
+      }
+
+      .status-in_progress {
+        background: rgba(255, 193, 7, 0.2);
+        color: #7a5c00;
+      }
+
+      .status-done {
+        background: rgba(40, 167, 80, 0.15);
+        color: #1a7a3c;
+      }
+
+      .status-failed {
+        background: rgba(211, 77, 45, 0.15);
+        color: var(--accent-dark);
+      }
+
+      /* ── Info box ── */
+      .info-box {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(16, 35, 50, 0.08);
+        font-size: 0.92rem;
+        min-height: 48px;
+        word-break: break-word;
+      }
+
+      /* ── Misc ── */
+      .subtle {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .loader {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(16, 35, 50, 0.15);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Toast notifications ── */
+      .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+      }
+
+      .toast {
+        background: var(--panel-dark);
+        color: white;
+        padding: 14px 18px;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        font-size: 0.9rem;
+        max-width: 320px;
+        pointer-events: auto;
+        animation: slideIn 0.3s ease;
+      }
+
+      .toast-title {
+        font-weight: 700;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.7;
+        margin-bottom: 4px;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(120%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        to {
+          transform: translateX(120%);
+          opacity: 0;
+        }
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 768px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .action-item {
+          grid-template-columns: auto 1fr;
+          gap: 6px;
+        }
+
+        .action-item .action-route,
+        .action-item .status-badge {
+          grid-column: span 2;
+        }
+
+        .action-item .action-btn-wrap {
+          grid-column: span 2;
+        }
+      }
+
+      /* ── Страница начальника ── */
+      .grid-tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+      .grid-tbl th { text-align: left; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+                     color: var(--steel, #5c6b7a); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+      .grid-tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+      .grid-tbl tr.off td { opacity: 0.5; }
+      .btn-ghost { background: #e9edf1; color: #183852; border: 0; cursor: pointer; }
+      .btn-ghost:hover { background: #dde3e9; }
+      .mini { width: auto; padding: 6px 10px; font-size: 0.78rem; border-radius: 10px; margin: 2px 4px 2px 0; }
+      .chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 600;
+              background: #e9edf1; color: #33475b; }
+      .chip.on { background: #e3f4e8; color: #1d6b3a; }
+      .chip.warn { background: #fdeee3; color: #9a3b2b; }
+      .emp-row { display: grid; grid-template-columns: 1fr 1fr 190px 40px; gap: 8px; margin-bottom: 8px; }
+      .emp-row button { width: 40px; }
+      .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-top: 14px; }
+      .badge-card { border: 1px solid var(--line); border-radius: 14px; padding: 10px; background: #fff; }
+      .badge-card img { width: 100%; border-radius: 8px; display: block; }
+      .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+      .stat { background: #f3f6f9; border-radius: 14px; padding: 12px; }
+      .stat b { display: block; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+      .stat span { font-size: 0.78rem; color: var(--steel, #5c6b7a); }
+      .pw { font-family: ui-monospace, Menlo, monospace; font-size: 0.9rem; }
+      @media print {
+        body * { visibility: hidden; }
+        #print_area, #print_area * { visibility: visible; }
+        #print_area { position: absolute; inset: 0; }
+      }
+    </style>
+    <link rel="stylesheet" href="theme.css" />
+  </head>
+  <body>
+    <header class="user-bar">
+      <div class="user-bar-left">
+        <span class="user-bar-title">ЭДКТ</span>
+        <span class="user-bar-name" id="ub_name">—</span>
+        <span class="role-badge">Начальник площадки</span>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <a class="btn-logout" href="index.html" style="text-decoration:none">Площадка и отчёты</a>
+        <button class="btn-logout" onclick="logout()">Выйти</button>
+      </div>
+    </header>
+
+    <div class="page">
+      <section class="hero">
+        <div class="hero-card">
+          <h1>Площадка сегодня</h1>
+          <p>Сотрудники, краны и наряды всех смен в одном месте. Здесь же начальник заводит
+            новых сотрудников и выдаёт им пароли и пропуска.</p>
+          <div class="stats">
+            <div class="stat"><b id="st_online">—</b><span>крановщиков в сети</span></div>
+            <div class="stat"><b id="st_work">—</b><span>нарядов в работе</span></div>
+            <div class="stat"><b id="st_staff">—</b><span>активных сотрудников</span></div>
+          </div>
+        </div>
+        <aside class="summary">
+          <div class="summary-title">Краны</div>
+          <div id="cranes_box" class="info-box">Загрузка...</div>
+        </aside>
+      </section>
+
+      <div class="table-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Новые сотрудники</h2>
+            <p>Можно завести сразу несколько человек. Логин программа составит из фамилии и имени,
+              пароль и пропуск с QR-кодом выдаст сама — они показываются один раз.</p>
+          </div>
+          <button class="btn-secondary" style="width:auto" onclick="addEmpRow()">+ Ещё сотрудник</button>
+        </div>
+        <div id="emp_rows"></div>
+        <button class="btn-primary mt" style="width:auto;padding:10px 18px" onclick="registerEmployees()">Зарегистрировать</button>
+        <div class="result" id="res_emp" style="display:none"></div>
+        <div id="issued"></div>
+      </div>
+
+      <div class="table-panel">
+        <div class="panel-head">
+          <div><h2>Сотрудники</h2><p>Кто на каком кране, кто в сети. Потерян пропуск — выпустите новый, старый перестанет действовать.</p></div>
+          <button class="btn-secondary" style="width:auto" onclick="refreshAll()">Обновить</button>
+        </div>
+        <div id="emp_list"><p class="subtle">Загрузка...</p></div>
+      </div>
+
+      <div class="table-panel">
+        <div class="panel-head">
+          <div><h2>Наряды всех смен</h2><p>Кто создал наряд, на какой кран и сколько шагов уже выполнено.</p></div>
+        </div>
+        <div id="tasks_all"><p class="subtle">Загрузка...</p></div>
+      </div>
+    </div>
+    <div id="print_area" style="display:none"></div>
+
+    <script>
+      const API = "http://127.0.0.1:8000";
+      const token = localStorage.getItem("token");
+      if (!token) location.href = "login.html";
+      const authHeaders = () => ({ Authorization: "Bearer " + token });
+      const ROLE = { manager: "Начальник площадки", transceiver: "Приёмосдатчик", crane_operator: "Крановщик" };
+      const STATUS = { draft: "черновик", sent: "отправлен", in_progress: "выполняется", completed: "выполнен" };
+      const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        location.href = "login.html";
+      }
+
+      async function api(path, opts = {}) {
+        const res = await fetch(API + path, { ...opts, headers: { ...authHeaders(), "Content-Type": "application/json", ...(opts.headers || {}) } });
+        if (res.status === 401) return logout();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || res.status);
+        return data;
+      }
+
+      // ── новые сотрудники ──
+      let rowN = 0;
+      function addEmpRow() {
+        const i = ++rowN;
+        const div = document.createElement("div");
+        div.className = "emp-row"; div.id = "emp_" + i;
+        div.innerHTML = `<input id="ln_${i}" placeholder="Фамилия" /><input id="fn_${i}" placeholder="Имя" />
+          <select id="rl_${i}"><option value="crane_operator">Крановщик</option><option value="transceiver">Приёмосдатчик</option>
+          <option value="manager">Начальник площадки</option></select>
+          <button class="btn-ghost" title="Убрать" onclick="document.getElementById('emp_${i}').remove()">×</button>`;
+        document.getElementById("emp_rows").appendChild(div);
+      }
+
+      async function registerEmployees() {
+        const rows = [...document.querySelectorAll(".emp-row")];
+        const employees = rows.map((r) => {
+          const i = r.id.split("_")[1];
+          return { last_name: document.getElementById("ln_" + i).value.trim(),
+                   first_name: document.getElementById("fn_" + i).value.trim(),
+                   role: document.getElementById("rl_" + i).value };
+        }).filter((e) => e.last_name || e.first_name);
+        const el = document.getElementById("res_emp");
+        el.style.display = "block";
+        if (!employees.length) { el.className = "result error"; el.textContent = "Заполните хотя бы одну строку."; return; }
+        try {
+          const out = await api("/user/employees", { method: "POST", body: JSON.stringify({ employees }) });
+          el.className = "result success";
+          el.textContent = `Зарегистрировано: ${out.length}. Сохраните пароли и пропуска — повторно они не показываются.`;
+          document.getElementById("emp_rows").innerHTML = ""; addEmpRow();
+          await showIssued(out);
+          refreshAll();
+        } catch (e) { el.className = "result error"; el.textContent = "Ошибка: " + e.message; }
+      }
+
+      // Пропуск рисуется в браузере: ФИО, роль, логин и QR-код от сервера
+      function loadImg(src) { return new Promise((ok) => { const im = new Image(); im.onload = () => ok(im); im.src = src; }); }
+      async function badgePng(e) {
+        const W = 640, H = 380, cv = document.createElement("canvas");
+        cv.width = W; cv.height = H;
+        const g = cv.getContext("2d");
+        g.fillStyle = "#ffffff"; g.fillRect(0, 0, W, H);
+        g.fillStyle = "#0e2a47"; g.fillRect(0, 0, W, 64);
+        g.fillStyle = "#f06a1d"; g.fillRect(0, 64, W, 8);
+        g.fillStyle = "#ffffff"; g.font = "700 30px Unbounded, Arial, sans-serif"; g.fillText("ЭДКТ", 24, 44);
+        g.font = "500 18px Onest, Arial, sans-serif"; g.fillText("пропуск сотрудника", 150, 42);
+        g.fillStyle = "#0e2a47"; g.font = "700 30px Onest, Arial, sans-serif";
+        g.fillText(e.last_name || e.user_name, 24, 130);
+        g.font = "500 26px Onest, Arial, sans-serif"; g.fillText(e.first_name || "", 24, 168);
+        g.fillStyle = "#1f5fa8"; g.font = "600 20px Onest, Arial, sans-serif"; g.fillText(ROLE[e.role] || e.role, 24, 218);
+        g.fillStyle = "#5c6b7a"; g.font = "400 18px Onest, Arial, sans-serif"; g.fillText("логин: " + e.user_name, 24, 254);
+        g.font = "400 14px Onest, Arial, sans-serif";
+        g.fillText("Поднесите QR-код к сканеру на странице входа.", 24, 330);
+        g.fillText("При утере сообщите начальнику площадки.", 24, 352);
+        const qr = await loadImg("data:image/png;base64," + e.qr_png);
+        g.drawImage(qr, W - 250, 100, 226, 226);
+        return cv.toDataURL("image/png");
+      }
+
+      function fileName(e) { return `propusk_${e.user_name}.png`; }
+      function download(url, name) { const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
+
+      let ISSUED = [];
+      async function showIssued(list) {
+        for (const e of list) e.png = await badgePng(e);
+        ISSUED = list;
+        const rows = list.map((e) => `<tr><td>${esc(e.last_name)} ${esc(e.first_name)}</td><td>${ROLE[e.role]}</td>
+          <td><b>${esc(e.user_name)}</b></td><td class="pw">${e.password ? esc(e.password) : "—"}</td></tr>`).join("");
+        document.getElementById("issued").innerHTML = `
+          <h3 style="margin:18px 0 8px">Выданные доступы</h3>
+          <table class="grid-tbl"><tr><th>Сотрудник</th><th>Роль</th><th>Логин</th><th>Пароль</th></tr>${rows}</table>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn-secondary mini" onclick="downloadAllBadges()">Скачать все пропуска</button>
+            <button class="btn-secondary mini" onclick="downloadLogins()">Скачать логины и пароли (CSV)</button>
+            <button class="btn-secondary mini" onclick="printBadges()">Печать пропусков</button>
+          </div>
+          <div class="badges">${list.map((e, i) => `<div class="badge-card"><img src="${e.png}" alt="Пропуск ${esc(e.user_name)}" />
+            <button class="btn-ghost mini" style="margin-top:8px" onclick="download(ISSUED[${i}].png, fileName(ISSUED[${i}]))">Скачать пропуск</button></div>`).join("")}</div>`;
+      }
+
+      function downloadAllBadges() {
+        ISSUED.forEach((e, i) => setTimeout(() => download(e.png, fileName(e)), i * 300));
+      }
+      function downloadLogins() {
+        const lines = ["Фамилия;Имя;Роль;Логин;Пароль", ...ISSUED.map((e) =>
+          [e.last_name, e.first_name, ROLE[e.role], e.user_name, e.password || ""].join(";"))];
+        const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+        download(URL.createObjectURL(blob), "logins_" + new Date().toISOString().slice(0, 10) + ".csv");
+      }
+      function printBadges() {
+        const pa = document.getElementById("print_area");
+        pa.innerHTML = ISSUED.map((e) => `<img src="${e.png}" style="width:85mm;margin:4mm;border:1px solid #ccc" />`).join("");
+        pa.style.display = "block"; window.print(); pa.style.display = "none";
+      }
+
+      // ── сотрудники ──
+      async function empAction(id, kind) {
+        try {
+          if (kind === "badge") {
+            const b = await api(`/user/employees/${id}/badge`, { method: "POST" });
+            await showIssued([{ ...b, password: null }]);
+            document.getElementById("issued").scrollIntoView({ behavior: "smooth" });
+          } else if (kind === "password") {
+            const p = await api(`/user/employees/${id}/password`, { method: "POST" });
+            alertBox(`Новый пароль для ${p.user_name}: ${p.password}`);
+          } else {
+            await api(`/user/employees/${id}`, { method: "PATCH", body: JSON.stringify({ is_active: kind === "on" }) });
+          }
+          refreshAll();
+        } catch (e) { alertBox("Ошибка: " + e.message, true); }
+      }
+      function alertBox(msg, err) {
+        const el = document.getElementById("res_emp");
+        el.style.display = "block"; el.className = "result " + (err ? "error" : "success"); el.textContent = msg;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      async function loadEmployees() {
+        const list = await api("/user/employees");
+        document.getElementById("st_online").textContent = list.filter((e) => e.role === "crane_operator" && e.online).length;
+        document.getElementById("st_staff").textContent = list.filter((e) => e.is_active).length;
+        document.getElementById("emp_list").innerHTML = `<table class="grid-tbl">
+          <tr><th>Сотрудник</th><th>Логин</th><th>Роль</th><th>Кран</th><th>Связь</th><th>Пропуск</th><th></th></tr>
+          ${list.map((e) => `<tr class="${e.is_active ? "" : "off"}">
+            <td>${esc(e.last_name || "")} ${esc(e.first_name || "")}</td><td>${esc(e.user_name)}</td><td>${ROLE[e.role] || e.role}</td>
+            <td>${esc(e.crane || "—")}</td>
+            <td>${e.role === "crane_operator" ? (e.online ? '<span class="chip on">в сети</span>' : '<span class="chip">не в сети</span>') : ""}</td>
+            <td>${e.has_badge ? '<span class="chip on">выдан</span>' : '<span class="chip warn">нет</span>'}</td>
+            <td>${e.is_active ? `<button class="btn-secondary mini" onclick="empAction(${e.user_id},'badge')">Новый пропуск</button>
+              <button class="btn-ghost mini" onclick="empAction(${e.user_id},'password')">Сбросить пароль</button>
+              ${e.role === "manager" ? "" : `<button class="btn-ghost mini" onclick="empAction(${e.user_id},'off')">Отключить</button>`}`
+              : `<button class="btn-ghost mini" onclick="empAction(${e.user_id},'on')">Включить</button>`}</td></tr>`).join("")}</table>`;
+      }
+
+      async function loadCranes() {
+        const cr = await api("/cran/cranes");
+        document.getElementById("cranes_box").innerHTML = cr.map((c) =>
+          `<div style="display:flex;justify-content:space-between;gap:8px;margin:4px 0"><b>${esc(c.name)}</b>
+           <span>${c.operator_name ? esc(c.operator_name) + (c.online ? ' <span class="chip on">в сети</span>' : ' <span class="chip">не в сети</span>') : "свободен"}</span></div>`).join("");
+      }
+
+      async function loadTasks() {
+        const t = await api("/cran/tasks/all");
+        document.getElementById("st_work").textContent = t.filter((x) => x.status === "sent" || x.status === "in_progress").length;
+        document.getElementById("tasks_all").innerHTML = t.length ? `<table class="grid-tbl">
+          <tr><th>№</th><th>Статус</th><th>Создал</th><th>Кран</th><th>Крановщик</th><th>Шаги</th><th>Содержание</th><th>Создан</th></tr>
+          ${t.map((x) => `<tr><td>${x.id}</td><td><span class="chip ${x.status === "completed" ? "on" : ""}">${STATUS[x.status] || x.status}</span></td>
+            <td>${esc(x.created_by)}</td><td>${esc(x.crane || "—")}</td><td>${esc(x.assigned_to || "—")}</td>
+            <td>${x.done}/${x.actions}</td><td>${esc(x.summary)}</td>
+            <td>${x.created_at ? new Date(x.created_at + (/[zZ]|[+-]\d\d:?\d\d$/.test(x.created_at) ? "" : "Z")).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}</td></tr>`).join("")}
+          </table>` : '<p class="subtle">Нарядов пока нет.</p>';
+      }
+
+      async function refreshAll() {
+        try { await Promise.all([loadEmployees(), loadCranes(), loadTasks()]); } catch (e) { console.warn(e); }
+      }
+
+      (async () => {
+        const me = await api("/user/me");
+        if (!me) return;
+        if (me.role !== "manager") { location.href = me.role === "crane_operator" ? "crane.html" : "index.html"; return; }
+        document.getElementById("ub_name").textContent = [me.last_name, me.first_name].filter(Boolean).join(" ") || me.user_name;
+        addEmpRow(); addEmpRow();
+        refreshAll();
+        setInterval(refreshAll, 15000);
+      })();
+    </script>
+  </body>
+</html>

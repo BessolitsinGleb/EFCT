@@ -737,9 +737,12 @@
       <div class="user-bar-left">
         <span class="user-bar-title">ЭДКТ</span>
         <span class="user-bar-name" id="ub_name">—</span>
-        <span class="role-badge">Приёмосдатчик</span>
+        <span class="role-badge" id="ub_role">Приёмосдатчик</span>
       </div>
-      <button class="btn-logout" onclick="logout()">Выйти</button>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <a class="btn-logout" id="ub_manager" href="manager.html" style="display:none;text-decoration:none">Панель начальника</a>
+        <button class="btn-logout" onclick="logout()">Выйти</button>
+      </div>
     </header>
 
     <div class="page">
@@ -1711,7 +1714,12 @@
             location.href = "crane.html";
             return;
           }
+          if (user.role === "manager") {
+            document.getElementById("ub_role").textContent = "Начальник площадки";
+            document.getElementById("ub_manager").style.display = "";
+          }
           const name =
+            [user.last_name, user.first_name].filter(Boolean).join(" ") ||
             user.user_name || user.username || user.name || "ID " + user.id;
           document.getElementById("ub_name").textContent = name;
           await loadYard();

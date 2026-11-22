@@ -16,3 +16,4 @@ websockets
 httpx
 psycopg[binary]
 requests
+segno

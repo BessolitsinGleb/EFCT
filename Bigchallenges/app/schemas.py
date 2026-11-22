@@ -64,7 +64,10 @@ class TokenResp(BaseModel):
     token_type: str = "bearer"
 
 class UserResponse(BaseModel):
+    user_id: int | None = None
     user_name: str
+    first_name: str | None = None
+    last_name: str | None = None
     role: str
 
 class TaskActionCreate(BaseModel):

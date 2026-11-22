@@ -19,6 +19,10 @@ class Settings_(BaseSettings):
     SCORE_MEDIUM_HOURS: float = 240
     SCORE_LOWER_PENALTY: float = 0.5
 
+    # Регистрация: по умолчанию сотрудников регистрирует только начальник площадки.
+    # True — открытая регистрация (демо-стенд и автотесты).
+    OPEN_REGISTRATION: bool = False
+
     # Хранение (условный тариф, заменяется прайсом терминала):
     # первые STORAGE_FREE_DAYS суток бесплатно, далее ставка за TEU в сутки (40 фут. = 2 TEU)
     STORAGE_FREE_DAYS: int = 2

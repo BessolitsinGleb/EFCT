@@ -33,6 +33,18 @@ def on_startup():
             conn.execute(text("ALTER TABLE tasks ADD COLUMN crane_id INTEGER REFERENCES cranes(crane_id)"))
         if "size" not in [c["name"] for c in inspect(conn).get_columns("movement_information")]:
             conn.execute(text("ALTER TABLE movement_information ADD COLUMN size INTEGER"))
+        ucols = [c["name"] for c in inspect(conn).get_columns("users")]
+        if "is_active" not in ucols:
+            conn.execute(text("ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE"))
+        if "badge_hash" not in ucols:
+            conn.execute(text("ALTER TABLE users ADD COLUMN badge_hash VARCHAR"))
+        for col in ("first_name", "last_name"):
+            if col not in ucols:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} VARCHAR"))
+    # новая роль «начальник» в старой базе: значение перечисления добавляется вне транзакции
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        if conn.dialect.name == "postgresql":
+            conn.execute(text("ALTER TYPE role ADD VALUE IF NOT EXISTS 'manager'"))
     with sync_session() as db:
         created = ensure_yard_cells(db)
         if created:

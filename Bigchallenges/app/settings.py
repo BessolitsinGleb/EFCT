@@ -131,7 +131,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise HTTPException(status_code=401)
 
     user = db.get(User, int(user_id))
-    if user is None:  # пользователь удалён, а токен ещё действует
+    if user is None or not user.is_active:  # удалён или отключён начальником, а токен ещё действует
         raise HTTPException(status_code=401)
     return user
 
@@ -225,7 +225,6 @@ def verify_token(token: str) -> User | None:
     db = sync_session()
     try:
         user = db.query(User).filter(User.user_id == int(user_id)).first()
-        print(f"User из БД: {user}")
-        return user
+        return user if user and user.is_active else None
     finally:
         db.close()
