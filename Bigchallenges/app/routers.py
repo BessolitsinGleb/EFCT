@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Response, APIRouter, Depends, HTTPException
 from .database import get_db
 from sqlalchemy.orm import Session
 from .models import Coordinates, Mooving, Movement_info, User, Role, PlacementRule
@@ -244,8 +244,13 @@ def recommend_cells(data: Recomend, user: User = Depends(get_current_user), db: 
 @router.post("/data_upload")
 def uploading_to_company(data: UploadData, user: User = Depends(get_current_user)):
     require_transceiver(user)
-    status = upload_company_mov(data.company, data.start_data, data.end_data)
-    return {"status": "success"} if status else {"status": "not success"}
+    report = upload_company_mov(data.company, data.start_data, data.end_data)
+    if report is None:
+        raise HTTPException(500, "Не удалось сформировать отчёт")
+    filename, content, rows = report
+    return Response(content, media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"',
+                             "X-Rows": str(rows), "Access-Control-Expose-Headers": "Content-Disposition, X-Rows"})
 
 
 # ---------- настраиваемые правила размещения ----------

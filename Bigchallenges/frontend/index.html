@@ -1314,7 +1314,30 @@
           end_data: new Date(endRaw).toISOString(),
         };
 
-        apiPost("/container/data_upload", body, "res_upload_data");
+        const el = document.getElementById("res_upload_data");
+        el.style.display = "block";
+        el.className = "result";
+        el.textContent = "Формирую отчёт...";
+        fetch(API + "/container/data_upload", {
+          method: "POST",
+          headers: { ...authHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then(async (res) => {
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.status);
+            const name = `${company.replace(/[^\wа-яё-]/gi, "_")}_report_${startRaw.slice(0, 10)}_${endRaw.slice(0, 10)}.csv`;
+            const rows = res.headers.get("X-Rows");
+            const url = URL.createObjectURL(await res.blob());
+            const a = document.createElement("a");
+            a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+            el.className = "result success";
+            el.textContent = `Отчёт скачан: ${name} (операций: ${rows ?? "—"}).`;
+          })
+          .catch((e) => {
+            el.className = "result error";
+            el.textContent = "Ошибка: " + e.message;
+          });
       }
 
       /* ── Layer table ── */
@@ -1444,7 +1467,7 @@
                   (item) => `
                 <tr>
                   <td>${item.value ?? "—"}</td>
-                  <td>${item.moove_type ?? "—"}</td>
+                  <td>${({ adding: "размещение", loading: "выдача", rearrangement: "перестановка" })[item.moove_type] ?? item.moove_type ?? "—"}</td>
                   <td>${item.path_num_from ?? "—"}</td>
                   <td>${item.path_num_to ?? "—"}</td>
                   <td>${item.cell_from ?? "—"}</td>
@@ -1624,6 +1647,8 @@
       function formatDate(iso) {
         if (!iso) return "—";
         try {
+          // сервер хранит время в UTC без пояснения зоны — показываем в местном времени
+          if (typeof iso === "string" && !/[zZ]|[+-]\d\d:?\d\d$/.test(iso)) iso += "Z";
           return new Date(iso).toLocaleString("ru-RU", {
             day: "2-digit",
             month: "2-digit",

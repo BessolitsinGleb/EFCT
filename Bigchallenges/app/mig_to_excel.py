@@ -67,13 +67,12 @@ def upload_company_mov(company: str,
 
         safe_company = re.sub(r"[^\w\-]", "_", company)  # без «/», «..» и т. п. в имени файла
         filename = f"{safe_company}_reporting_from_{start_data_name}_to_{end_data_name}.csv"
-        if os.path.exists(filename):
-            os.remove(filename)
-        df.to_csv(filename, index=False)
-        return True
+        # отчёт отдаётся пользователю файлом (раньше сохранялся только на сервере);
+        # utf-8-sig — чтобы Excel правильно открыл кириллицу
+        return filename, df.to_csv(index=False).encode("utf-8-sig"), len(df)
     except Exception as e:
         print(f"error {e}")
-        return False
+        return None
             
 
 def ask_ai(prompt: str):
