@@ -32,10 +32,18 @@ class StepEvents:
 
 @dataclass
 class RewardConfig:
-    reject_penalty: float = 5.0     # отказ в приёме = 5 перестановок (ТЗ, п. 1)
-    cost_unit: float = 200.0        # сколько у. е. приравниваем к одной перестановке
-    # можешь добавить свои коэффициенты
+    """Коэффициенты автора, приведённые к «цене» каждого события.
+    Было: placed 0.75·10, rejected 0.25·10, rear 1.5, reloc 1.5, деньги ·0.01·0.2."""
+    rehandle: float = 3.4       # одна лишняя перестановка: 1.5 (rear) + 1.5 (шаг перестановки) + 0.4 (доплата)
+    reject: float = 10.0        # отказ в приёме: 7.5 + 2.5 — разница «поставили / не поставили»
+    money: float = 0.002        # за 1 у. е. стоимости операций (200 у. е. = 0.4)
+    premarshal: float = 0.5     # заблаговременная перестановка: небольшой штраф сверх её стоимости,
+                                # чтобы агент не переставлял ради переставлений (польза — меньше rehandles)
 
 
 def reward(ev: StepEvents, cfg: RewardConfig = RewardConfig()) -> float:
-    raise NotImplementedError("Напиши функцию награды: что хорошо для площадки — плюс, что плохо — минус")
+    """Минимизируем деньги и особенно лишние перестановки; отказ — штраф, но не главный."""
+    return -(cfg.rehandle * ev.rehandles
+             + cfg.reject * ev.rejected
+             + cfg.money * ev.move_cost
+             + cfg.premarshal * ev.premarshal_moves)
